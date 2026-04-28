@@ -1,0 +1,42 @@
+# General
+.DS_Store
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.iml
+.settings/
+.classpath
+.project
+
+# Node.js / React (FE)
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java / Spring Boot / Maven (BE)
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/
+
+# Temporary / Build directories
+build/
+coverage/
+.next/
+out/
+
+# Workspace metadata
+.DA_CK/
