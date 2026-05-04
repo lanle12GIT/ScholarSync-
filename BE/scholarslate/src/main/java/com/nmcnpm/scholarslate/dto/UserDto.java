@@ -1,5 +1,6 @@
 package com.nmcnpm.scholarslate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,10 @@ import java.time.LocalDateTime;
 public class UserDto {
     private Long id;
     private String userName;
+    
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+    
     private String email;
     private LocalDateTime createdAt;
 }
