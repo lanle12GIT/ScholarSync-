@@ -28,7 +28,7 @@ const WelcomePage: React.FC = () => {
         }}
       />
     </div>
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 };

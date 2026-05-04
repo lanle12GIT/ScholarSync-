@@ -200,7 +200,6 @@ const AuthPage: React.FC = () => {
             className="auth-submit-btn"
             size="large"
             loading={loading}
-            disabled={!!apiError || !!confirmError}
             style={{fontWeight: 600 }}
           >
             {isLogin ? 'Đăng nhập' : 'Đăng ký'}
