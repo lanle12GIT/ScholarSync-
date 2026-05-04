@@ -1,8 +1,26 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './components/layout/Navbar';
+import WelcomePage from './pages/WelcomePage';
+import DashboardPage from './pages/DashboardPage';
+import ExplorerPage from './pages/ExplorerPage';
+import TopicsPage from './pages/TopicsPage';
+import FavoritesPage from './pages/FavoritesPage';
+import AuthPage from './pages/AuthPage';
+
 function App() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
-      <h1 style={{ color: 'var(--primary-color)' }}>Welcome</h1>
-    </div>
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/topics" element={<TopicsPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
