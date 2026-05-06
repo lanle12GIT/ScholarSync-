@@ -23,6 +23,7 @@ public class TopicServiceImpl implements TopicService {
     private final TopicRepository topicRepository;
     private final UserRepository userRepository;
     private final UserTopicRepository userTopicRepository;
+    private final com.nmcnpm.scholarslate.mapper.TopicMapper topicMapper;
 
     @Override
     @Transactional
@@ -48,7 +49,7 @@ public class TopicServiceImpl implements TopicService {
                 .build();
         userTopicRepository.save(userTopic);
 
-        return mapToDto(topic);
+        return topicMapper.toDto(topic);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class TopicServiceImpl implements TopicService {
         // Chỉ trả về topic hiện tại.
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new RuntimeException("Topic not found: " + topicId));
-        return mapToDto(topic);
+        return topicMapper.toDto(topic);
     }
 
     @Override
@@ -81,16 +82,8 @@ public class TopicServiceImpl implements TopicService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
         return userTopicRepository.findByUser(user).stream()
-                .map(userTopic -> mapToDto(userTopic.getTopic()))
+                .map(userTopic -> topicMapper.toDto(userTopic.getTopic()))
                 .collect(Collectors.toList());
     }
 
-    private TopicDto mapToDto(Topic topic) {
-        return TopicDto.builder()
-                .id(topic.getId())
-                .name(topic.getName())
-                .topicCateg(topic.getTopicCateg())
-                .key(topic.getKey())
-                .build();
-    }
 }
