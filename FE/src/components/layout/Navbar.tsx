@@ -16,7 +16,6 @@ const navItems = [
 const Navbar: React.FC = () => {
   // Mock user state as planned
   const [userName, setUserName] = useState<string>('User');
-  const [userEmail, setUserEmail] = useState<string>('');
   const location = useLocation();
   const navigate = useNavigate();
   const [hasToken, setHasToken] = useState<boolean>(false);
@@ -37,7 +36,6 @@ const Navbar: React.FC = () => {
 
     if (token) {
       setUserName(Cookies.get('userName') || 'User');
-      setUserEmail(Cookies.get('userEmail') || '');
       notificationApi.getUserNotifications()
         .then(notifications => {
           const count = notifications.filter(n => n.isRead === 0).length;

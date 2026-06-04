@@ -337,7 +337,7 @@ const PaperDetailPage: React.FC = () => {
                   </div>
                 )}
                 <h4><FileTextOutlined /> Abstract</h4>
-                <p>{paper.abstractText || paper.abstract || 'No abstract available.'}</p>
+                <p>{paper.abstractText || 'No abstract available.'}</p>
               </div>
             )}
           </div>

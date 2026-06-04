@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Typography, Button, Pagination, Tag, Spin } from 'antd';
-import { FolderOpenOutlined, FileTextOutlined, HeartOutlined, BellOutlined, LeftOutlined, RightOutlined, CalendarOutlined, UserOutlined, StarFilled } from '@ant-design/icons';
+import { FolderOpenOutlined, FileTextOutlined, HeartOutlined, BellOutlined, LeftOutlined, RightOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { dashboardApi } from '../api/dashboardApi';
 import type { DashboardStats } from '../api/dashboardApi';
@@ -232,7 +232,7 @@ const DashboardPage: React.FC = () => {
         ) : topPapers.length > 0 ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-              {topPapers.map((paper, index) => {
+              {topPapers.map((paper) => {
                 const footerBg = '#f9fafb';
 
                 return (

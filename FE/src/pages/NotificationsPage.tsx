@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, List, Card, Spin, message, Badge, Button } from 'antd';
-import { CheckCircleOutlined, BellOutlined, ShareAltOutlined, CopyOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Typography, List, Card, Spin, message, Badge } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
 import { notificationApi, type NotificationDto } from '../api/notificationApi';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);

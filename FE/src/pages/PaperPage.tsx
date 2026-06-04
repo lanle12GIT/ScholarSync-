@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Spin, Card, Typography, Pagination, Tag, Button, Row, Col, Divider, Segmented } from 'antd';
+import { Spin, Card, Typography, Pagination, Tag, Button, Row, Col, Segmented } from 'antd';
 import { paperApi } from '../api/paperApi';
 import { CalendarOutlined, LinkOutlined, UserOutlined, CompassOutlined, StarFilled } from '@ant-design/icons';
 
