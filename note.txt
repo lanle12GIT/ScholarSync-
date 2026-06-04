@@ -2,4 +2,7 @@ Nếu có thời gian thì thêm validation cho input
     LoginRequest, RegisterRequest không có validation (@NotBlank, @Email, @Size...)
     Không validate độ dài password, format email ở backend
     FE chỉ dùng required attribute — thiếu validation chi tiết
+Sửa lại api topic gọi theo thời gian chứ ko lấy hết
+Chưa có edit topic
+
 

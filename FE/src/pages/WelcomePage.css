@@ -2,32 +2,61 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8f9fc; /* Very light subtle blue/gray background */
+  background-color: #f0f1f3;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #1a202c;
-  /* Dot pattern background */
-  background-image: radial-gradient(#d1d5db 1px, transparent 1px);
-  background-size: 24px 24px;
 }
 
 /* Navbar */
-.navbar {
+.navbar-container {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+.navbar-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 4rem;
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.navbar-bottom {
+  display: flex;
+  align-items: center;
+  padding: 0 4rem;
+  background-color: hsl(206, 51%, 85%);
+  height: 46px;
+}
+
+.nav-menu-item {
+  color: rgb(17, 17, 17) !important;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 0 1.5rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.nav-menu-item:hover, .nav-menu-item.active {
+  background-color: rgba(46, 90, 209, 0.15);
+}
+
+.nav-menu-divider {
+  color: rgba(47, 49, 58, 0.4);
 }
 
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 3rem; /* Khoảng cách giữa Logo, Tabs và lời chào */
+  gap: 1rem; /* Khoảng cách giữa Logo, Tabs và lời chào */
 }
 
 .nav-logo {
@@ -47,7 +76,7 @@
 
 .nav-links {
   display: flex;
-  gap: 2.5rem;
+  gap: 1.5rem;
 }
 
 .nav-link {
@@ -285,7 +314,7 @@
 
 /* Footer */
 .footer {
-  background-color: white;
+  background-color: #eaf1fa;
   padding: 2rem 4rem;
   display: flex;
   justify-content: space-between;
@@ -308,8 +337,8 @@
 }
 
 .footer-copyright {
-  color: #a0aec0;
-  font-size: 0.85rem;
+  color: #466792;
+  font-size: 1.0rem;
 }
 
 .footer-links {

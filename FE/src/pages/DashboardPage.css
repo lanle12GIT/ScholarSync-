@@ -1,0 +1,46 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px 32px;
+}
+
+.custom-search-input input::placeholder {
+  color: #4b5563 ;
+  opacity: 1;
+  font-weight: 500;
+}
+
+.stats-row {
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.03);
+}
+
+.stat-card .ant-card-body {
+  padding: 20px 24px;
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stat-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+

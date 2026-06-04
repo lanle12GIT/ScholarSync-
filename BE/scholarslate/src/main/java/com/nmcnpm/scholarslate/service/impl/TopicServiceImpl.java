@@ -1,0 +1,97 @@
+package com.nmcnpm.scholarslate.service.impl;
+
+import com.nmcnpm.scholarslate.dto.TopicDto;
+import com.nmcnpm.scholarslate.entity.Topic;
+import com.nmcnpm.scholarslate.entity.User;
+import com.nmcnpm.scholarslate.entity.UserTopic;
+import com.nmcnpm.scholarslate.entity.UserTopicId;
+import com.nmcnpm.scholarslate.repository.TopicRepository;
+import com.nmcnpm.scholarslate.repository.UserRepository;
+import com.nmcnpm.scholarslate.repository.UserTopicRepository;
+import com.nmcnpm.scholarslate.service.TopicService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class TopicServiceImpl implements TopicService {
+
+    private final TopicRepository topicRepository;
+    private final UserRepository userRepository;
+    private final UserTopicRepository userTopicRepository;
+    private final com.nmcnpm.scholarslate.mapper.TopicMapper topicMapper;
+
+    @Override
+    @Transactional
+    public TopicDto createTopicForUser(String key, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        // Find topic by key instead of id
+        Topic topic = topicRepository.findByKey(key)
+                .orElseThrow(() -> new RuntimeException("Topic not found with key: " + key));
+
+        // Check if user already saved this topic
+        if (userTopicRepository.existsByUserAndTopic(user, topic)) {
+            throw new RuntimeException("Topic already exists in your list!");
+        }
+
+        // Add to user_topic
+        UserTopicId userTopicId = new UserTopicId(user.getId(), topic.getId());
+        UserTopic userTopic = UserTopic.builder()
+                .id(userTopicId)
+                .user(user)
+                .topic(topic)
+                .build();
+        userTopicRepository.save(userTopic);
+
+        return topicMapper.toDto(topic);
+    }
+
+    @Override
+    @Transactional
+    public TopicDto updateTopic(Long topicId, TopicDto topicDto, String email) {
+        // Tạm thời chưa sửa gì cho Topic, vì Topic là dữ liệu arXiv có sẵn.
+        // Chỉ trả về topic hiện tại.
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found: " + topicId));
+        return topicMapper.toDto(topic);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTopicForUser(Long topicId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found: " + topicId));
+
+        // Remove from user_topic
+        userTopicRepository.deleteByUserAndTopic(user, topic);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopicDto> getUserTopics(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        return userTopicRepository.findByUser(user).stream()
+                .map(userTopic -> topicMapper.toDto(userTopic.getTopic()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopicDto> getTopicsByCategory(Long categoryId) {
+        return topicRepository.findByTopicCateg(categoryId).stream()
+                .map(topicMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+}

@@ -7,17 +7,18 @@ const Footer: React.FC = () => {
     <footer className="footer">
       <div className="footer-left">
         <div className="footer-logo">
-          <ReadOutlined style={{ color: '#00875A' }} /> Scholar Slate
+          <ReadOutlined style={{ color: '#2a3ba0ff' }} />Scholar Slate
         </div>
         <div className="footer-copyright">
-          © 2026 Scholar Slate. All rights reserved.
+          2026_LETHILAN_24880226
         </div>
       </div>
 
       <div className="footer-links">
-        <a href="#privacy" className="footer-link">Privacy Policy</a>
-        <a href="#terms" className="footer-link">Terms of Service</a>
-        <a href="#contact" className="footer-link">Contact Support</a>
+        <span style={{ color: '#718096', fontSize: '0.9rem' }}>Powered by</span>
+        <a href="https://arxiv.org" target="_blank" rel="noopener noreferrer" className="footer-link">arXiv.org</a>
+        <span style={{ color: '#cbd5e0' }}>•</span>
+        <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" className="footer-link">Google Gemini</a>
       </div>
 
       <div className="footer-right">
