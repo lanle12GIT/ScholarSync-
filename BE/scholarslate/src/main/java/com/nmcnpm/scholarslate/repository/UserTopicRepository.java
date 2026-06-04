@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface UserTopicRepository extends JpaRepository<UserTopic, UserTopicId> {
     List<UserTopic> findByUser(User user);
+    List<UserTopic> findByTopic(Topic topic);
     void deleteByUserAndTopic(User user, Topic topic);
     boolean existsByUserAndTopic(User user, Topic topic);
+    long countByUser(User user);
 }

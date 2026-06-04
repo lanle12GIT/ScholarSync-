@@ -89,4 +89,14 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         favoriteRepository.deleteByUserAndPaper(user, paper);
     }
+
+    @Override
+    public boolean checkFavorite(Long paperId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        Paper paper = paperRepository.findById(paperId)
+                .orElseThrow(() -> new RuntimeException("Paper not found: " + paperId));
+
+        return favoriteRepository.existsByUserAndPaper(user, paper);
+    }
 }

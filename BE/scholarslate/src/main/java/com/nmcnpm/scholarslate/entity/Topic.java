@@ -27,4 +27,7 @@ public class Topic {
 
     @Column(name = "`key`")
     private String key;
+
+    @org.hibernate.annotations.Formula("(SELECT count(*) FROM paper_topic pt WHERE pt.topic_id = id)")
+    private Long paperCount;
 }

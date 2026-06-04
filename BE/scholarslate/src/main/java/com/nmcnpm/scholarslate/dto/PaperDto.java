@@ -23,5 +23,6 @@ public class PaperDto {
     private String link;
     private LocalDate publishedAt;
     private LocalDateTime fetchedAt;
+    private Float point;
     private List<TopicDto> topics;
 }

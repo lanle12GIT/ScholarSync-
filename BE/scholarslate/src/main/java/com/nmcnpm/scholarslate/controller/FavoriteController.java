@@ -37,4 +37,11 @@ public class FavoriteController {
         favoriteService.removeFavorite(paperId, userDetails.getEmail());
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/check/{paperId}")
+    public ResponseEntity<Boolean> checkFavorite(@PathVariable Long paperId, Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        boolean isFavorited = favoriteService.checkFavorite(paperId, userDetails.getEmail());
+        return ResponseEntity.ok(isFavorited);
+    }
 }

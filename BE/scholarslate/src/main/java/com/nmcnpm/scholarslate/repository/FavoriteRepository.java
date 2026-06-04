@@ -14,4 +14,5 @@ public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> 
     boolean existsByUserAndPaper(User user, Paper paper);
     void deleteByUserAndPaper(User user, Paper paper);
     Page<Favorite> findByUser(User user, Pageable pageable);
+    long countByUser(User user);
 }

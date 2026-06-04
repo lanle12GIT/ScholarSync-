@@ -2,11 +2,11 @@
 :root {
   --primary-color: #3b82f6;
   --secondary-color: #1d4ed8;
-  --bg-color: #0f172a;
-  --surface-color: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
+  --bg-color: white;
+  --surface-color: #ffffff;
+  --text-main: #1f1f1f;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
   --font-family: 'Inter', sans-serif;
   --radius: 8px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -39,4 +39,32 @@ a:hover {
 h1, h2, h3, h4 {
   font-weight: 600;
   color: var(--text-main);
+}
+
+/* Custom Ant Design Message Styles - Making alerts larger globally */
+.ant-message .ant-message-notice-content {
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ant-message-custom-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.ant-message-custom-content span {
+  font-size: 20px !important;
+}
+
+.ant-message-custom-content .anticon {
+  font-size: 24px !important;
+}
+
+
+/* Custom Segmented for Paper Page */
+.paper-filter-bar .ant-segmented-item-selected {
+  background-color: #374151 !important;
+  color: white !important;
 }

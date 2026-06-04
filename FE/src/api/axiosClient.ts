@@ -1,21 +1,22 @@
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
+import Cookies from 'js-cookie';
 
-// Lấy base URL từ biến môi trường (nếu có), hoặc dùng mặc định
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+// Get base URL from environment variable (if available), or use default
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const axiosClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // Thời gian timeout (10 giây)
+  timeout: 10000, // Timeout duration (10 seconds)
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor cho Request: Tự động đính kèm token vào header (Authorization) trước khi gửi API
+// Request Interceptor: Automatically attach token to header (Authorization) before sending API request
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,31 +27,56 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// Interceptor cho Response: Xử lý phản hồi và lỗi chung từ server
+// Response Interceptor: Handle responses and common server errors
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Trả về trực tiếp response.data để khi gọi API không cần chấm thêm .data
-    // Giúp code gọn hơn: const data = await axiosClient.get('/users'); thay vì const res = ... res.data
+    // Return response.data directly so we don't need to access .data when calling API
+    // Cleaner code: const data = await axiosClient.get('/users'); instead of const res = ... res.data
     if (response && response.data) {
       return response.data;
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config as any;
+
     if (error.response) {
-      // Xử lý lỗi 401 Unauthorized (Chưa đăng nhập hoặc Token hết hạn)
-      if (error.response.status === 401) {
-        console.warn("Phiên đăng nhập hết hạn hoặc chưa xác thực. Đang chuyển hướng...");
-        // Xóa token cũ
-        localStorage.removeItem('token');
-        
-        // Điều hướng người dùng về trang đăng nhập nếu đang không ở trang đăng nhập/đăng ký
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-          window.location.href = '/login';
+      // Handle 401 Unauthorized (Token expired)
+      if (error.response.status === 401 && originalRequest && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          // Call API to refresh token
+          const res = await axios.post(`${BASE_URL}/refresh`, {}, { withCredentials: true });
+          const newAccessToken = res.data.accessToken || res.data.token;
+
+          if (!newAccessToken) {
+            throw new Error('No valid token received on refresh');
+          }
+
+          // Save new token
+          Cookies.set('token', newAccessToken, { expires: 7 });
+          
+          // Update default headers and original request headers
+          axiosClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          
+          // Retry the original request
+          return axiosClient(originalRequest);
+        } catch (refreshError) {
+          console.warn("Session expired or refresh failed. Redirecting to login...");
+          // Remove old token
+          Cookies.remove('token');
+          
+          // Redirect user to login page
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshError);
         }
       }
     }
-    // Ném lỗi để component có thể catch(err) và hiển thị thông báo
+    // Throw error so component can catch(err) and display error message
     return Promise.reject(error.response?.data || error);
   }
 );

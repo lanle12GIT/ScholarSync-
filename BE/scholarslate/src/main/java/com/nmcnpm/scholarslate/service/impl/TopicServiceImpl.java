@@ -27,17 +27,17 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public TopicDto createTopicForUser(TopicDto topicDto, String email) {
+    public TopicDto createTopicForUser(String key, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        // Find existing topic by id
-        Topic topic = topicRepository.findById(topicDto.getId())
-                .orElseThrow(() -> new RuntimeException("Topic not found with id: " + topicDto.getId()));
+        // Find topic by key instead of id
+        Topic topic = topicRepository.findByKey(key)
+                .orElseThrow(() -> new RuntimeException("Topic not found with key: " + key));
 
-        // Check if already exists
+        // Check if user already saved this topic
         if (userTopicRepository.existsByUserAndTopic(user, topic)) {
-            throw new RuntimeException("Topic đã tồn tại trong danh sách của bạn!");
+            throw new RuntimeException("Topic already exists in your list!");
         }
 
         // Add to user_topic
@@ -83,6 +83,14 @@ public class TopicServiceImpl implements TopicService {
 
         return userTopicRepository.findByUser(user).stream()
                 .map(userTopic -> topicMapper.toDto(userTopic.getTopic()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopicDto> getTopicsByCategory(Long categoryId) {
+        return topicRepository.findByTopicCateg(categoryId).stream()
+                .map(topicMapper::toDto)
                 .collect(Collectors.toList());
     }
 

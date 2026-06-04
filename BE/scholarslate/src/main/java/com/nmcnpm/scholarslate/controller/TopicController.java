@@ -11,6 +11,8 @@ import com.nmcnpm.scholarslate.security.services.UserDetailsImpl;
 
 import java.util.List;
 
+import java.util.Map;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/topics")
@@ -20,10 +22,14 @@ public class TopicController {
     private final TopicService topicService;
 
     @PostMapping
-    public ResponseEntity<TopicDto> addTopicForUser(@RequestBody TopicDto topicDto, Authentication authentication) {
+    public ResponseEntity<TopicDto> addTopicForUser(@RequestBody Map<String, String> payload, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String email = userDetails.getEmail();
-        return new ResponseEntity<>(topicService.createTopicForUser(topicDto, email), HttpStatus.CREATED);
+        String key = payload.get("key");
+        if (key == null || key.trim().isEmpty()) {
+            throw new RuntimeException("Key is required");
+        }
+        return new ResponseEntity<>(topicService.createTopicForUser(key, email), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -46,5 +52,10 @@ public class TopicController {
         String email = userDetails.getEmail();
         topicService.deleteTopicForUser(id, email);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<TopicDto>> getTopicsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(topicService.getTopicsByCategory(categoryId));
     }
 }

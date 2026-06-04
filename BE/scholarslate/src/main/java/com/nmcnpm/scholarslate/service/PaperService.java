@@ -16,4 +16,29 @@ public interface PaperService {
      * Lấy chi tiết 1 paper
      */
     PaperDto getPaperById(Long id);
+
+    /**
+     * Tóm tắt paper bằng AI
+     */
+    String summarizePaper(Long id);
+
+    /**
+     * Chấm điểm paper bằng AI
+     */
+    Float scorePaper(Long id);
+
+    /**
+     * Lấy danh sách paper cho feed cá nhân
+     */
+    PaperPageResponse getUserFeed(String email, int page, int size);
+
+    /**
+     * Lấy danh sách paper cho feed khám phá
+     */
+    PaperPageResponse getDiscoverFeed(String email, int page, int size);
+
+    /**
+     * Lấy danh sách bài báo đáng đọc (điểm cao >= 80)
+     */
+    PaperPageResponse getTopRatedPapers(int page, int size);
 }

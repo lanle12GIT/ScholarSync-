@@ -45,6 +45,9 @@ public class Paper {
     @Column(name = "fetched_at")
     private LocalDateTime fetchedAt;
 
+    @Column(name = "point")
+    private Float point;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "paper_topic",

@@ -6,4 +6,5 @@ public interface FavoriteService {
     PaperPageResponse getFavoritePapers(String email, int page, int size);
     void addFavorite(Long paperId, String email);
     void removeFavorite(Long paperId, String email);
+    boolean checkFavorite(Long paperId, String email);
 }

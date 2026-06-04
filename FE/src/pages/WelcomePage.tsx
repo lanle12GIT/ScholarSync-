@@ -1,5 +1,5 @@
 import React from 'react';
-import WelComeImage from '../assets/images/Welcome.png';
+import WelComeImage from '../assets/images/Welcome.jpg';
 import Footer from '../components/layout/Footer';
 import './WelcomePage.css';
 
@@ -19,7 +19,7 @@ const WelcomePage: React.FC = () => {
     >
       <img
         src={WelComeImage}
-        alt="Theo dõi và tóm tắt paper AI bạn quan tâm"
+        alt="Track and summarize AI papers you care about"
         style={{
           width: '100%',
           height: 'auto',

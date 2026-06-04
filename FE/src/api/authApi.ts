@@ -12,34 +12,26 @@ export interface RegisterPayload {
   password: string;
 }
 
-// Gom nhóm các API liên quan đến Xác thực và Người dùng
+// Group all Authentication and User-related APIs
 export const authApi = {
   /**
-   * Đăng nhập người dùng
-   * @param data Dữ liệu gồm email và password
+   * Login user
+   * @param data Data including email and password
    */
   login(data: LoginPayload) {
     return axiosClient.post('/auth/login', data);
   },
 
   /**
-   * Đăng ký tài khoản mới
-   * @param data Dữ liệu gồm username, email, password
+   * Register a new account
+   * @param data Data including username, email, password
    */
   register(data: RegisterPayload) {
     return axiosClient.post('/auth/register', data);
   },
-
+ 
   /**
-   * Lấy thông tin người dùng đang đăng nhập (dựa vào token đã lưu)
-   * API đường dẫn có thể là '/users/me' hoặc '/auth/me' tùy backend của bạn cấu hình
-   */
-  getCurrentUser() {
-    return axiosClient.get('/users/me'); 
-  },
-  
-  /**
-   * Đăng xuất (nếu backend yêu cầu gọi API để xóa token/session)
+   * Logout (if backend requires API call to invalidate token/session)
    */
   logout() {
     return axiosClient.post('/auth/logout');

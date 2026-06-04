@@ -14,4 +14,5 @@ public class TopicDto {
     private String name;
     private Long topicCateg;
     private String key;
+    private Long paperCount;
 }

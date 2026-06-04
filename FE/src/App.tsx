@@ -2,10 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
-import ExplorerPage from './pages/ExplorerPage';
+import PaperPage from './pages/PaperPage';
+import PaperDetailPage from './pages/PaperDetailPage';
 import TopicsPage from './pages/TopicsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import AuthPage from './pages/AuthPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 function App() {
   return (
@@ -16,9 +18,11 @@ function App() {
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/explorer" element={<ExplorerPage />} />
-        <Route path="/topics" element={<TopicsPage />} />
+         <Route path="/topics" element={<TopicsPage />} />
+        <Route path="/paper" element={<PaperPage />} />
+        <Route path="/paper/:id" element={<PaperDetailPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
     </BrowserRouter>
   );

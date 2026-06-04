@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import { Button } from 'antd';
-import { EyeInvisibleOutlined, EyeOutlined, GoogleOutlined, FacebookFilled, ReadOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined, ReadOutlined } from '@ant-design/icons';
 import { authApi } from '../api/authApi';
 import './AuthPage.css';
 
@@ -38,42 +39,48 @@ const AuthPage: React.FC = () => {
     setEmailError(false);
 
     if (!isLogin) {
-      // Kiểm tra mật khẩu nhập lại
+      // Check confirm password
       if (password !== confirmPassword) {
-        setConfirmError('Mật khẩu nhập lại không khớp!');
+        setConfirmError('Passwords do not match!');
         return;
       }
 
-      // Gọi API đăng ký
+      // Call register API
       setLoading(true);
       try {
         await authApi.register({ userName: username, email, password });
-        // Đăng ký thành công -> chuyển sang trang đăng nhập
+        // Registration successful -> redirect to login
         navigate('/login');
       } catch (err: any) {
-        // err đã được axiosClient interceptor bóc sẵn = error.response.data (chuỗi hoặc object)
+        // err is already unwrapped by axiosClient interceptor = error.response.data (string or object)
         const msg = typeof err === 'string' ? err : (err?.message || '');
         if (msg.includes('Email is already in use')) {
-          setApiError('Email này đã được sử dụng!');
+          setApiError('This email is already in use!');
           setEmailError(true);
         } else if (msg.includes('Username is already taken')) {
-          setApiError('Tên tài khoản đã tồn tại!');
+          setApiError('Username is already taken!');
         } else {
-          setApiError(msg || 'Đã có lỗi xảy ra, vui lòng thử lại.');
+          setApiError(msg || 'An error occurred. Please try again.');
         }
       } finally {
         setLoading(false);
       }
     } else {
-      // Gọi API đăng nhập
+      // Call login API
       setLoading(true);
       try {
         const res: any = await authApi.login({ email, password });
-        localStorage.setItem('token', res.token || res.accessToken || 'fake-token');
+        const token = res.token || res.accessToken;
+        if (!token) {
+          throw new Error('Đăng nhập thất bại: Không nhận được token hợp lệ.');
+        }
+        Cookies.set('token', token, { expires: 7 }); // expire in 7 days
+        if (res.userName) Cookies.set('userName', res.userName, { expires: 7 });
+        if (res.email) Cookies.set('userEmail', res.email, { expires: 7 });
         navigate('/dashboard');
       } catch (err: any) {
         const msg = typeof err === 'string' ? err : (err?.message || '');
-        setApiError(msg || 'Email hoặc mật khẩu không đúng.');
+        setApiError(msg || 'Incorrect email or password.');
       } finally {
         setLoading(false);
       }
@@ -82,29 +89,29 @@ const AuthPage: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <Link to="/" className="auth-logo">
+      <div  className="auth-logo">
         <ReadOutlined className="auth-logo-icon" />
-        <span>Scholar Slate</span>
-      </Link>
+        <h3>Scholar Slate</h3>
+      </div>
       <div className="auth-card">
         <div className="auth-tabs">
           <div 
             className={`auth-tab ${isLogin ? 'active' : ''}`}
             onClick={() => switchTab('/login')}
           >
-            Đăng nhập
+            Login
           </div>
           <div 
             className={`auth-tab ${!isLogin ? 'active' : ''}`}
             onClick={() => switchTab('/register')}
           >
-            Đăng ký
+            Register
           </div>
         </div>
 
         <div className="auth-header">
-          <h1 className="auth-title">{isLogin ? 'Chào mừng trở lại' : 'Tạo tài khoản mới'}</h1>
-          <p className="auth-subtitle">Truy cập vào kho tàng trí thức của bạn</p>
+          <h1 className="auth-title">{isLogin ? 'Welcome back' : 'Create new account'}</h1>
+          <p className="auth-subtitle">Access your knowledge treasury</p>
         </div>
 
         
@@ -112,11 +119,11 @@ const AuthPage: React.FC = () => {
         <form className="auth-form" onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="form-group">
-              <label className="form-label">Tên tài khoản</label>
+              <label className="form-label">Username</label>
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="Nhập tên tài khoản" 
+                placeholder="Enter your username" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -144,8 +151,8 @@ const AuthPage: React.FC = () => {
 
           <div className="form-group">
             <div className="form-label-row">
-              <label className="form-label">Mật khẩu</label>
-              {isLogin && <a href="#" className="forgot-password">Quên mật khẩu?</a>}
+              <label className="form-label">Password</label>
+              {isLogin && <a href="#" className="forgot-password">Forgot password?</a>}
             </div>
             <div className="password-input-wrapper">
               <input 
@@ -167,7 +174,7 @@ const AuthPage: React.FC = () => {
 
           {!isLogin && (
             <div className="form-group">
-              <label className="form-label">Nhập lại mật khẩu</label>
+              <label className="form-label">Confirm password</label>
               <div className="password-input-wrapper">
                 <input 
                   type={showConfirmPassword ? "text" : "password"} 
@@ -202,12 +209,12 @@ const AuthPage: React.FC = () => {
             loading={loading}
             style={{fontWeight: 600 }}
           >
-            {isLogin ? 'Đăng nhập' : 'Đăng ký'}
+            {isLogin ? 'Login' : 'Register'}
           </Button>
         </form>
         <div className="auth-footer">
-          Bằng việc tiếp tục, bạn đồng ý với Điều khoản Dịch vụ
-          và Chính sách Bảo mật của chúng tôi.
+          By continuing, you agree to our Terms of Service
+          and Privacy Policy.
         </div>
       </div>
     </div>

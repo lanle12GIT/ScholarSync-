@@ -46,4 +46,51 @@ public class PaperController {
     public ResponseEntity<PaperDto> getPaperById(@PathVariable Long id) {
         return ResponseEntity.ok(paperService.getPaperById(id));
     }
+
+    /**
+     * POST /api/papers/{id}/summarize
+     *
+     * Gọi AI để tóm tắt một paper nếu chưa có.
+     */
+    @PostMapping("/{id}/summarize")
+    public ResponseEntity<String> summarizePaper(@PathVariable Long id) {
+        return ResponseEntity.ok(paperService.summarizePaper(id));
+    }
+
+    /**
+     * POST /api/papers/{id}/score
+     *
+     * Gọi AI để chấm điểm một paper nếu chưa có.
+     */
+    @PostMapping("/{id}/score")
+    public ResponseEntity<Float> scorePaper(@PathVariable Long id) {
+        return ResponseEntity.ok(paperService.scorePaper(id));
+    }
+
+    @GetMapping("/feed/user")
+    public ResponseEntity<PaperPageResponse> getUserFeed(
+            org.springframework.security.core.Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        com.nmcnpm.scholarslate.security.services.UserDetailsImpl userDetails = 
+                (com.nmcnpm.scholarslate.security.services.UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(paperService.getUserFeed(userDetails.getEmail(), page, size));
+    }
+
+    @GetMapping("/feed/discover")
+    public ResponseEntity<PaperPageResponse> getDiscoverFeed(
+            org.springframework.security.core.Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        com.nmcnpm.scholarslate.security.services.UserDetailsImpl userDetails = 
+                (com.nmcnpm.scholarslate.security.services.UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(paperService.getDiscoverFeed(userDetails.getEmail(), page, size));
+    }
+
+    @GetMapping("/top-rated")
+    public ResponseEntity<PaperPageResponse> getTopRatedPapers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+        return ResponseEntity.ok(paperService.getTopRatedPapers(page, size));
+    }
 }
