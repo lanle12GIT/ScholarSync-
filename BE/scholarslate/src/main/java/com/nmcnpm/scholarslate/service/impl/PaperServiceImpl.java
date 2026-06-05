@@ -25,7 +25,7 @@ public class PaperServiceImpl implements PaperService {
 
     private final PaperRepository paperRepository;
     private final com.nmcnpm.scholarslate.mapper.PaperMapper paperMapper;
-    private final com.nmcnpm.scholarslate.service.GeminiService geminiService;
+    private final com.nmcnpm.scholarslate.service.AiService aiService;
     private final com.nmcnpm.scholarslate.repository.UserRepository userRepository;
     private final com.nmcnpm.scholarslate.repository.UserTopicRepository userTopicRepository;
 
@@ -57,7 +57,7 @@ public class PaperServiceImpl implements PaperService {
             return paper.getSummary();
         }
 
-        String summary = geminiService.summarizeText(paper.getAbstractText());
+        String summary = aiService.summarizeText(paper.getAbstractText());
         if (summary != null) {
             paper.setSummary(summary);
             paperRepository.save(paper);
@@ -75,7 +75,7 @@ public class PaperServiceImpl implements PaperService {
             return paper.getPoint();
         }
 
-        Float point = geminiService.scorePaper(paper.getAbstractText());
+        Float point = aiService.scorePaper(paper.getAbstractText());
         if (point != null) {
             paper.setPoint(point);
             paperRepository.save(paper);

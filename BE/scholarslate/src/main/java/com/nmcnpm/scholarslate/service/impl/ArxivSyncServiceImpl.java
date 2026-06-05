@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.nmcnpm.scholarslate.service.GeminiService;
+import com.nmcnpm.scholarslate.service.AiService;
 import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -35,7 +35,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
 
     private final TopicRepository topicRepository;
     private final PaperRepository paperRepository;
-    private final GeminiService geminiService;
+    private final AiService aiService;
 
     @Async
     @Override
@@ -126,8 +126,8 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                                 continue;
                             }
 
-                            String summary = geminiService.summarizeText(abstractText);
-                            Float point = geminiService.scorePaper(abstractText);
+                            String summary = aiService.summarizeText(abstractText);
+                            Float point = aiService.scorePaper(abstractText);
 
                             Paper paper = Paper.builder()
                                     .arxivId(arxivId)
@@ -146,7 +146,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                             paperRepository.save(paper);
                             log.info("Saved new paper: {}", paper.getArxivId());
 
-                            // Chờ giữa mỗi bài để không vượt rate limit Gemini
+                            // Chờ giữa mỗi bài để an toàn
                             Thread.sleep(3_000);
                         }
                     } catch (Exception e) {
@@ -204,18 +204,31 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
         int count = 0;
         for (com.nmcnpm.scholarslate.entity.Paper paper : missingPapers) {
             try {
-                Float point = geminiService.scorePaper(paper.getAbstractText());
+                Float point = aiService.scorePaper(paper.getAbstractText());
                 if (point != null) {
                     paper.setPoint(point);
-                    paperRepository.save(paper);
-                    count++;
                     log.info("Scored paper {}: {}", paper.getArxivId(), point);
                 } else {
                     log.warn("Failed to score paper {}", paper.getArxivId());
                 }
+                
+                // Nghỉ 10s trước khi gọi API summary để không bị dính rate limit
+                Thread.sleep(10_000);
 
-                // Sleep to avoid rate limiting
-                Thread.sleep(4000);
+                String summary = paper.getSummary();
+                if (summary == null || summary.trim().isEmpty()) {
+                    summary = aiService.summarizeText(paper.getAbstractText());
+                    if (summary != null) {
+                        paper.setSummary(summary);
+                        log.info("Summarized paper {}", paper.getArxivId());
+                    }
+                }
+
+                paperRepository.save(paper);
+                count++;
+
+                // Sleep 10s to avoid OpenRouter's 8 requests/min limit cho lần lặp tiếp theo
+                Thread.sleep(10_000);
             } catch (Exception e) {
                 log.error("Error scoring paper {}: {}", paper.getArxivId(), e.getMessage());
             }
