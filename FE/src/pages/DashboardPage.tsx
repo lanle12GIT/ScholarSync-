@@ -67,7 +67,7 @@ const DashboardPage: React.FC = () => {
     const fetchStats = async () => {
       try {
         const response: any = await dashboardApi.getStats();
-        setStatsData(response.data || response);
+        setStatsData(response.data ?? response);
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);
       }
@@ -80,7 +80,7 @@ const DashboardPage: React.FC = () => {
     const fetchTrend = async () => {
       try {
         const response: any = await dashboardApi.getStats(currentYear, currentMonth);
-        const data = response.data || response;
+        const data = response.data ?? response;
         setTrendData(data.trendData || []);
         setTopicNames(data.followedTopicNames || []);
       } catch (error) {

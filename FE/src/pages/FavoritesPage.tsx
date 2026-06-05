@@ -41,7 +41,7 @@ const FavoritesPage: React.FC = () => {
     setLoading(true);
     try {
       const response: any = await paperApi.getFavorites(page, pageSize);
-      const data = response.data || response;
+      const data = response.data ?? response;
       const fetchedPapers = data.papers || [];
       setPapers(fetchedPapers);
       setTotalElements(data.totalElements || 0);
@@ -63,7 +63,7 @@ const FavoritesPage: React.FC = () => {
       setSummarizingIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.summarizePaper(paper.id);
-        const newSummary = response.data || response;
+        const newSummary = response.data ?? response;
         
         if (newSummary) {
           setPapers(prevPapers => 

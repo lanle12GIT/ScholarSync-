@@ -95,7 +95,7 @@ const PaperDetailPage: React.FC = () => {
     try {
       setLoading(true);
       const response: any = await paperApi.getPaperById(paperId);
-      const data = response.data || response;
+      const data = response.data ?? response;
       setPaper(data);
 
       // Auto-summarize if missing
@@ -113,7 +113,7 @@ const PaperDetailPage: React.FC = () => {
     setSummarizing(true);
     try {
       const response: any = await paperApi.summarizePaper(paperId);
-      const newSummary = response.data || response;
+      const newSummary = response.data ?? response;
       if (newSummary) {
         setPaper({ ...currentPaper, summary: newSummary });
       }
@@ -130,7 +130,7 @@ const PaperDetailPage: React.FC = () => {
     setHasMoreRelated(true);
     try {
       const response: any = await paperApi.searchPapers({ topicId, page: 0, size: 9 });
-      const data = response.data || response;
+      const data = response.data ?? response;
       const fetched: PaperType[] = data.papers || [];
       // Exclude current paper
       const filtered = fetched.filter((p) => String(p.id) !== String(id));
@@ -152,7 +152,7 @@ const PaperDetailPage: React.FC = () => {
     setLoadingMoreRelated(true);
     try {
       const response: any = await paperApi.searchPapers({ topicId, page: nextPage, size: 10 });
-      const data = response.data || response;
+      const data = response.data ?? response;
       const fetched: PaperType[] = data.papers || [];
       const filtered = fetched.filter((p) => String(p.id) !== String(id));
       setRelatedPapers(prev => [...prev, ...filtered]);

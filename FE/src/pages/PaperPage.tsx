@@ -72,7 +72,7 @@ const PaperPage: React.FC = () => {
         page,
         size: pageSize
       });
-      const data = response.data || response;
+      const data = response?.data ?? response;
       const fetchedPapers = data.papers || [];
       setPapers(fetchedPapers);
       setTotalElements(data.totalElements || 0);
@@ -89,7 +89,7 @@ const PaperPage: React.FC = () => {
     setLoading(true);
     try {
       const response: any = await paperApi.getUserFeed(page, pageSize);
-      const data = response.data || response;
+      const data = response?.data ?? response;
       const fetchedPapers = data.papers || [];
       setPapers(fetchedPapers);
       setTotalElements(data.totalElements || 0);
@@ -106,7 +106,7 @@ const PaperPage: React.FC = () => {
     setLoadingDiscover(true);
     try {
       const response: any = await paperApi.getDiscoverFeed(0, 5); // Get top 5 recommendations
-      const data = response.data || response;
+      const data = response?.data ?? response;
       const fetchedPapers = data.papers || [];
       setDiscoverPapers(fetchedPapers);
       autoSummarizeMissing(fetchedPapers, setDiscoverPapers);
@@ -126,7 +126,7 @@ const PaperPage: React.FC = () => {
       setSummarizingIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.summarizePaper(paper.id);
-        const newSummary = response.data || response;
+        const newSummary = response?.data ?? response;
         
         if (newSummary) {
           setter(prevPapers => 
@@ -155,7 +155,7 @@ const PaperPage: React.FC = () => {
       setScoringIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.scorePaper(paper.id);
-        const newScore = response.data || response;
+        const newScore = response?.data ?? response;
         
         if (newScore != null) {
           setter(prevPapers => 

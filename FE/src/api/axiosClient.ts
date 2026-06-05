@@ -32,10 +32,10 @@ axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Return response.data directly so we don't need to access .data when calling API
     // Cleaner code: const data = await axiosClient.get('/users'); instead of const res = ... res.data
-    if (response && response.data) {
+    if (response && response.data !== undefined) {
       return response.data;
     }
-    return response;
+    return null;
   },
   async (error) => {
     const originalRequest = error.config as any;
