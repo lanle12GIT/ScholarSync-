@@ -78,74 +78,79 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                 log.info("Found {} items for topic {}", entryList.getLength(), category);
 
                 for (int i = 0; i < entryList.getLength(); i++) {
-                    Node node = entryList.item(i);
-                    if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        Element element = (Element) node;
+                    try {
+                        Node node = entryList.item(i);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            Element element = (Element) node;
 
-                        String arxivIdUrl = getTagValue("link", element);
-                        String arxivId = extractArxivId(arxivIdUrl);
+                            String arxivIdUrl = getTagValue("link", element);
+                            String arxivId = extractArxivId(arxivIdUrl);
 
-                        if (paperRepository.existsByArxivId(arxivId)) {
-                            // Paper exists. Since we sort by newest, if we hit an existing paper,
-                            // it means we've likely processed all newer ones. We can just skip it.
-                            continue;
-                        }
-
-                        String title = getTagValue("title", element);
-
-                        String abstractTextRaw = getTagValue("description", element);
-                        String abstractText = abstractTextRaw;
-                        if (abstractTextRaw != null) {
-                            int index = abstractTextRaw.indexOf("Abstract: ");
-                            if (index >= 0) {
-                                abstractText = abstractTextRaw.substring(index + "Abstract: ".length()).trim();
+                            if (paperRepository.existsByArxivId(arxivId)) {
+                                // Paper exists. Since we sort by newest, if we hit an existing paper,
+                                // it means we've likely processed all newer ones. We can just skip it.
+                                log.info("Found existing paper {}, breaking loop for topic.", arxivId);
+                                break;
                             }
-                        }
 
-                        String publishedStr = getTagValue("pubDate", element); 
-                        String authors = getTagValue("dc:creator", element);
-                        if (authors == null) {
-                            authors = "";
-                        }
+                            String title = getTagValue("title", element);
 
-                        LocalDate publishedAt = null;
-                        if (publishedStr != null) {
-                            try {
-                                publishedAt = LocalDate.parse(publishedStr, DateTimeFormatter.RFC_1123_DATE_TIME);
-                            } catch (Exception e) {
-                                log.warn("Could not parse date: {}", publishedStr);
+                            String abstractTextRaw = getTagValue("description", element);
+                            String abstractText = abstractTextRaw;
+                            if (abstractTextRaw != null) {
+                                int index = abstractTextRaw.indexOf("Abstract: ");
+                                if (index >= 0) {
+                                    abstractText = abstractTextRaw.substring(index + "Abstract: ".length()).trim();
+                                }
                             }
+
+                            String publishedStr = getTagValue("pubDate", element); 
+                            String authors = getTagValue("dc:creator", element);
+                            if (authors == null) {
+                                authors = "";
+                            }
+
+                            LocalDate publishedAt = null;
+                            if (publishedStr != null) {
+                                try {
+                                    publishedAt = LocalDate.parse(publishedStr, DateTimeFormatter.RFC_1123_DATE_TIME);
+                                } catch (Exception e) {
+                                    log.warn("Could not parse date: {}", publishedStr);
+                                }
+                            }
+
+                            // Chỉ lưu bài báo mới (trong vòng 7 ngày gần nhất)
+                            // Bỏ qua các bài cũ được REPLACED hoặc CROSS LISTED lại trên RSS feed
+                            if (publishedAt == null || publishedAt.isBefore(LocalDate.now().minusDays(7))) {
+                                log.debug("Skipping old paper: {} (published: {})", arxivId, publishedAt);
+                                continue;
+                            }
+
+                            String summary = geminiService.summarizeText(abstractText);
+                            Float point = geminiService.scorePaper(abstractText);
+
+                            Paper paper = Paper.builder()
+                                    .arxivId(arxivId)
+                                    .title(title != null ? title.replace("\n", " ").trim() : "")
+                                    .abstractText(abstractText != null ? abstractText.trim() : "")
+                                    .summary(summary)
+                                    .point(point)
+                                    .authors(authors)
+                                    .link("https://arxiv.org/html/" + arxivId)
+                                    .publishedAt(publishedAt)
+                                    .fetchedAt(LocalDateTime.now())
+                                    .build();
+
+                            paper.getTopics().add(topic);
+
+                            paperRepository.save(paper);
+                            log.info("Saved new paper: {}", paper.getArxivId());
+
+                            // Chờ giữa mỗi bài để không vượt rate limit Gemini
+                            Thread.sleep(3_000);
                         }
-
-                        // Chỉ lưu bài báo mới (trong vòng 7 ngày gần nhất)
-                        // Bỏ qua các bài cũ được REPLACED hoặc CROSS LISTED lại trên RSS feed
-                        if (publishedAt == null || publishedAt.isBefore(LocalDate.now().minusDays(7))) {
-                            log.debug("Skipping old paper: {} (published: {})", arxivId, publishedAt);
-                            continue;
-                        }
-
-                        String summary = geminiService.summarizeText(abstractText);
-                        Float point = geminiService.scorePaper(abstractText);
-
-                        Paper paper = Paper.builder()
-                                .arxivId(arxivId)
-                                .title(title != null ? title.replace("\n", " ").trim() : "")
-                                .abstractText(abstractText != null ? abstractText.trim() : "")
-                                .summary(summary)
-                                .point(point)
-                                .authors(authors)
-                                .link("https://arxiv.org/html/" + arxivId)
-                                .publishedAt(publishedAt)
-                                .fetchedAt(LocalDateTime.now())
-                                .build();
-
-                        paper.getTopics().add(topic);
-
-                        paperRepository.save(paper);
-                        log.info("Saved new paper: {}", paper.getArxivId());
-
-                        // Chờ giữa mỗi bài để không vượt rate limit Gemini
-                        Thread.sleep(3_000);
+                    } catch (Exception e) {
+                        log.error("Error processing a paper for topic " + category + ": " + e.getMessage());
                     }
                 }
 
