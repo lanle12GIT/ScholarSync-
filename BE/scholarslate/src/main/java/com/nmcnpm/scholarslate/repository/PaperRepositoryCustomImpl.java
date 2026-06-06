@@ -26,12 +26,17 @@ public class PaperRepositoryCustomImpl implements PaperRepositoryCustom {
         Map<String, Object> params = new HashMap<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
+            // Thay thế các ký tự không phải chữ/số (ví dụ khoảng trắng, dấu gạch ngang, v.v.) bằng ký tự đại diện '%'
+            // Điều này giúp tìm kiếm linh hoạt hơn, xử lý được các trường hợp có dấu cách kép, ký tự xuống dòng, hoặc non-breaking space trong DB
+            String processedKeyword = keyword.trim().replaceAll("[^a-zA-Z0-9]+", "%");
+            
             String condition = " AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
                     "OR LOWER(p.abstractText) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-                    "OR LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ";
+                    "OR LOWER(p.summary) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                    "OR (t.name IS NOT NULL AND LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%')))) ";
             jpql.append(condition);
             countJpql.append(condition);
-            params.put("keyword", keyword.trim());
+            params.put("keyword", processedKeyword);
         }
 
         if (topicId != null) {
