@@ -35,5 +35,19 @@ export const authApi = {
    */
   logout() {
     return axiosClient.post('/auth/logout');
+  },
+
+  /**
+   * Get current logged-in user's account info (userName, email, createdAt)
+   */
+  getMe() {
+    return axiosClient.get('/account/me');
+  },
+
+  /**
+   * Change current user's password
+   */
+  changePassword(data: { currentPassword: string; newPassword: string }) {
+    return axiosClient.post('/account/change-password', data);
   }
 };

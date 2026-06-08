@@ -5,6 +5,7 @@ import { Button, Input, Badge, Dropdown, Avatar } from 'antd';
 import { ReadOutlined, LogoutOutlined, DashboardOutlined, CompassOutlined, TagsOutlined, HeartOutlined, SearchOutlined, BellOutlined, LoginOutlined, UserOutlined, DownOutlined } from '@ant-design/icons';
 import '../../pages/WelcomePage.css';
 import { notificationApi } from '../../api/notificationApi';
+import AccountModal from '../AccountModal';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: <DashboardOutlined /> },
@@ -20,6 +21,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [hasToken, setHasToken] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [accountOpen, setAccountOpen] = useState<boolean>(false);
 
   const handleLogout = () => {
     Cookies.remove('token');
@@ -71,6 +73,7 @@ const Navbar: React.FC = () => {
                     key: 'account',
                     icon: <UserOutlined style={{ fontSize: '16px' }}/>,
                     label: <span style={{ fontSize: '14px', color: '#374151' }}>Account</span>,
+                    onClick: () => setAccountOpen(true)
                   },
                   { type: 'divider' },
                   {
@@ -142,6 +145,8 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
     </nav>
   );
 };

@@ -6,6 +6,9 @@ import { CalendarOutlined, LinkOutlined, UserOutlined, HeartFilled } from '@ant-
 
 const { Title, Paragraph } = Typography;
 
+// Mỗi bài chỉ thử gọi AI tóm tắt tối đa 1 lần/phiên -> không bắn lại mỗi lần mở/quay lại trang.
+const attemptedSummaryIds = new Set<string>();
+
 interface TopicType {
   id: number;
   name: string;
@@ -56,10 +59,11 @@ const FavoritesPage: React.FC = () => {
   };
 
   const autoSummarizeMissing = async (currentPapers: PaperType[]) => {
-    const missing = currentPapers.filter(p => !p.summary);
+    const missing = currentPapers.filter(p => !p.summary && !attemptedSummaryIds.has(p.id));
     if (missing.length === 0) return;
 
     for (const paper of missing) {
+      attemptedSummaryIds.add(paper.id); // đánh dấu đã thử trong phiên này
       setSummarizingIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.summarizePaper(paper.id);
@@ -107,7 +111,7 @@ const FavoritesPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 0', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ width: '90%', margin: '0 auto', maxWidth: '1400px' }}>
-        <Row>
+        <Row justify="center">
           <Col xs={24} lg={20}>
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>

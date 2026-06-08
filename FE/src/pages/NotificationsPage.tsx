@@ -72,8 +72,8 @@ const NotificationsPage: React.FC = () => {
                   style={{ 
                     width: '100%', 
                     borderRadius: '12px',
-                    border: isUnread ? '1px solid #93c5fd' : '1px solid #e2e8f0',
-                    backgroundColor: isUnread ? '#eff6ff' : '#f8fafc',
+                    border: isUnread ? '1.5px solid #93c5fd' : '1.5px solid #ced6e0',
+                    backgroundColor: isUnread ? '#eff6ff' : '#eeeded',
                     boxShadow: isUnread ? '0 4px 12px rgba(59, 130, 246, 0.1)' : '0 2px 4px rgba(0, 0, 0, 0.05)',
                     transition: 'all 0.3s ease'
                   }}
@@ -97,36 +97,20 @@ const NotificationsPage: React.FC = () => {
                       </Text>
                     </div>
                     
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ 
-                        width: '100px', 
-                        height: '100px', 
-                        borderRadius: '50%', 
-                        background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '2px solid #bae6fd',
-                        boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5), 0 4px 6px rgba(0,0,0,0.05)',
-                        position: 'relative'
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <div style={{ fontSize: '34px', fontWeight: 800, color: '#1e3a8a', lineHeight: 1 }}>
+                        +{count}
+                      </div>
+                      <div style={{
+                        background: 'white',
+                        padding: '2px 14px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        color: '#1e3a8a',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        fontWeight: 600
                       }}>
-                        <div style={{ fontSize: '34px', fontWeight: 800, color: '#1e3a8a', lineHeight: 1, marginTop: '-8px' }}>
-                          +{count}
-                        </div>
-                        <div style={{ 
-                          background: 'white', 
-                          padding: '2px 14px', 
-                          borderRadius: '12px', 
-                          fontSize: '12px', 
-                          color: '#1e3a8a', 
-                          position: 'absolute',
-                          bottom: '8px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          fontWeight: 600
-                        }}>
-                          papers
-                        </div>
+                        papers
                       </div>
                     </div>
                   </div>

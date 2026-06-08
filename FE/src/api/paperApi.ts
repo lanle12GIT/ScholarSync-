@@ -77,13 +77,6 @@ export const paperApi = {
   },
 
   /**
-   * Get discover paper feed based on other topics
-   */
-  getDiscoverFeed(page: number = 0, size: number = 5) {
-    return axiosClient.get('/papers/feed/discover', { params: { page, size } });
-  },
-
-  /**
    * Get top rated papers (point >= 80)
    */
   getTopRatedPapers(page: number = 0, size: number = 6) {

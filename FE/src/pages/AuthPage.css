@@ -124,8 +124,8 @@
 }
 
 .auth-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-weight: 800;
   color: #111827;
   margin-bottom: 0.5rem;
 }
@@ -154,9 +154,9 @@
 }
 
 .form-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
 }
 
 .forgot-password {
@@ -171,12 +171,12 @@
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-input:focus {
@@ -188,10 +188,33 @@
   color: #9ca3af;
 }
 
+/* Nút Register / Login: full-width, xanh đậm, bo góc giống hình */
+.auth-submit-btn.ant-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 0.5rem;
+  background-color: #2563eb;
+  border-color: #2563eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.auth-submit-btn.ant-btn:hover,
+.auth-submit-btn.ant-btn:focus {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
 .password-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 2.75rem; /* chừa chỗ cho icon con mắt */
 }
 
 .password-toggle {

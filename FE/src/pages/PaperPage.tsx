@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Spin, Card, Typography, Pagination, Tag, Button, Row, Col, Segmented } from 'antd';
+import { Spin, Card, Typography, Pagination, Tag, Button, Row, Col, Popover, DatePicker, Radio } from 'antd';
+import dayjs from 'dayjs';
 import { paperApi } from '../api/paperApi';
-import { CalendarOutlined, LinkOutlined, UserOutlined, CompassOutlined, StarFilled } from '@ant-design/icons';
+import { CalendarOutlined, LinkOutlined, UserOutlined, StarFilled, FilterOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph } = Typography;
+
+// Theo dõi các bài đã được FE thử gọi AI trong phiên hiện tại.
+// Mỗi bài chỉ kích hoạt tối đa 1 lần -> không bắn lại request mỗi lần render / đổi tab / phân trang / quay lại trang.
+// Việc tóm tắt & chấm điểm chủ yếu do scheduler BE lo; FE chỉ hiển thị trạng thái "đang xử lý".
+const attemptedSummaryIds = new Set<string>();
+const attemptedScoreIds = new Set<string>();
 
 interface TopicType {
   id: number;
@@ -33,17 +40,21 @@ const PaperPage: React.FC = () => {
   const topicName = location.state?.topicName;
 
   const [papers, setPapers] = useState<PaperType[]>([]);
-  const [discoverPapers, setDiscoverPapers] = useState<PaperType[]>([]);
-  
+
   const [loading, setLoading] = useState<boolean>(true);
-  const [loadingDiscover, setLoadingDiscover] = useState<boolean>(true);
-  
+
   const [summarizingIds, setSummarizingIds] = useState<Set<string>>(new Set());
   const [scoringIds, setScoringIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalElements, setTotalElements] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'all' | 'today' | 'your_topic'>('your_topic');
   const pageSize = 10;
+
+  // Bộ lọc nâng cao (popup cạnh title): khoảng ngày + phạm vi topic
+  const [dateRange, setDateRange] = useState<any>(null);        // [Dayjs, Dayjs] | null
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingRange, setPendingRange] = useState<any>(null);
+  const [pendingScope, setPendingScope] = useState<'all' | 'your_topic'>('your_topic');
 
   useEffect(() => {
     if (topicId || keyword) {
@@ -53,22 +64,24 @@ const PaperPage: React.FC = () => {
     } else {
       if (activeTab === 'your_topic') {
         fetchUserFeed(currentPage);
-        if (currentPage === 0) fetchDiscoverFeed();
       } else {
         fetchPapersSearch(currentPage, activeTab);
       }
     }
-  }, [topicId, keyword, currentPage, activeTab]);
+  }, [topicId, keyword, currentPage, activeTab, dateRange]);
 
   const fetchPapersSearch = async (page: number, tab: 'all' | 'today' | 'your_topic') => {
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
+      // Ưu tiên khoảng ngày từ bộ lọc; nếu không có thì tab "today" lọc đúng hôm nay
+      const fromDate = dateRange?.[0] ? dateRange[0].format('YYYY-MM-DD') : (tab === 'today' ? today : undefined);
+      const toDate = dateRange?.[1] ? dateRange[1].format('YYYY-MM-DD') : (tab === 'today' ? today : undefined);
       const response: any = await paperApi.searchPapers({
         topicId: topicId || undefined,
         keyword: keyword || undefined,
-        fromDate: tab === 'today' ? today : undefined,
-        toDate: tab === 'today' ? today : undefined,
+        fromDate,
+        toDate,
         page,
         size: pageSize
       });
@@ -90,9 +103,22 @@ const PaperPage: React.FC = () => {
     try {
       const response: any = await paperApi.getUserFeed(page, pageSize);
       const data = response?.data ?? response;
-      const fetchedPapers = data.papers || [];
+      let fetchedPapers = data.papers || [];
+      let total = data.totalElements || 0;
+
+      // Feed followed-topics không lọc ngày ở BE -> lọc thêm phía client theo khoảng ngày đã chọn
+      if (dateRange?.[0] && dateRange?.[1]) {
+        const from = dateRange[0].startOf('day');
+        const to = dateRange[1].endOf('day');
+        fetchedPapers = fetchedPapers.filter((p: PaperType) => {
+          const d = dayjs(p.publishedAt);
+          return d.isValid() && !d.isBefore(from) && !d.isAfter(to);
+        });
+        total = fetchedPapers.length;
+      }
+
       setPapers(fetchedPapers);
-      setTotalElements(data.totalElements || 0);
+      setTotalElements(total);
       autoSummarizeMissing(fetchedPapers, setPapers);
       autoScoreMissing(fetchedPapers, setPapers);
     } catch (error) {
@@ -102,27 +128,12 @@ const PaperPage: React.FC = () => {
     }
   };
 
-  const fetchDiscoverFeed = async () => {
-    setLoadingDiscover(true);
-    try {
-      const response: any = await paperApi.getDiscoverFeed(0, 5); // Get top 5 recommendations
-      const data = response?.data ?? response;
-      const fetchedPapers = data.papers || [];
-      setDiscoverPapers(fetchedPapers);
-      autoSummarizeMissing(fetchedPapers, setDiscoverPapers);
-      autoScoreMissing(fetchedPapers, setDiscoverPapers);
-    } catch (error) {
-      console.error('Failed to fetch discover feed:', error);
-    } finally {
-      setLoadingDiscover(false);
-    }
-  };
-
   const autoSummarizeMissing = async (currentPapers: PaperType[], setter: React.Dispatch<React.SetStateAction<PaperType[]>>) => {
-    const missing = currentPapers.filter(p => !p.summary);
+    const missing = currentPapers.filter(p => !p.summary && !attemptedSummaryIds.has(p.id));
     if (missing.length === 0) return;
 
     for (const paper of missing) {
+      attemptedSummaryIds.add(paper.id); // đánh dấu đã thử trong phiên này
       setSummarizingIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.summarizePaper(paper.id);
@@ -148,10 +159,11 @@ const PaperPage: React.FC = () => {
   };
 
   const autoScoreMissing = async (currentPapers: PaperType[], setter: React.Dispatch<React.SetStateAction<PaperType[]>>) => {
-    const missing = currentPapers.filter(p => p.point == null);
+    const missing = currentPapers.filter(p => p.point == null && !attemptedScoreIds.has(p.id));
     if (missing.length === 0) return;
 
     for (const paper of missing) {
+      attemptedScoreIds.add(paper.id); // đánh dấu đã thử trong phiên này
       setScoringIds(prev => new Set(prev).add(paper.id));
       try {
         const response: any = await paperApi.scorePaper(paper.id);
@@ -305,40 +317,89 @@ const PaperPage: React.FC = () => {
     );
   };
 
-  return (
-    <div style={{ padding: '24px 0', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Filter Bar */}
-      {!topicId && !keyword && (
-        <div style={{ width: '100%', margin: '0 auto 32px auto', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '700px', maxWidth: '90%' }}>
-            <Segmented
-              className="paper-filter-bar"
-              block
-              options={[
-                { label: <div style={{ padding: '2px 0', fontSize: '14px', fontWeight: 600 }}>All</div>, value: 'all' },
-                { label: <div style={{ padding: '2px 0', fontSize: '14px', fontWeight: 600 }}>Paper today</div>, value: 'today' },
-                { label: <div style={{ padding: '2px 0', fontSize: '14px', fontWeight: 600 }}>Paper Your Topic</div>, value: 'your_topic' },
-              ]}
-              value={activeTab}
-              onChange={(val) => {
-                setActiveTab(val as any);
-                setCurrentPage(0);
-              }}
-              style={{ padding: '4px', background: '#f8f8f8ff', borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
-            />
+  const handleFilterOpenChange = (v: boolean) => {
+    setFilterOpen(v);
+    if (v) {
+      // Đồng bộ giá trị đang chọn vào form khi mở
+      setPendingRange(dateRange);
+      setPendingScope(activeTab === 'your_topic' ? 'your_topic' : 'all');
+    }
+  };
+
+  const applyFilter = () => {
+    setDateRange(pendingRange);
+    setActiveTab(pendingScope);
+    setCurrentPage(0);
+    setFilterOpen(false);
+  };
+
+  const clearFilter = () => {
+    setPendingRange(null);
+    setDateRange(null);
+    setCurrentPage(0);
+    setFilterOpen(false);
+  };
+
+  // Icon filter cạnh title: mở popup nhỏ chọn khoảng ngày + phạm vi topic
+  const filterIcon = (
+    <Popover
+      trigger="click"
+      placement="rightTop"
+      open={filterOpen}
+      onOpenChange={handleFilterOpenChange}
+      content={
+        <div style={{ width: 280 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Date range</div>
+          <DatePicker
+            value={pendingRange?.[0] || null}
+            onChange={(d) => setPendingRange([d, pendingRange?.[1] || null])}
+            placeholder="From date"
+            placement="bottomLeft"
+            popupClassName="paper-month-only"
+            allowClear
+            style={{ width: '100%', marginBottom: 8 }}
+          />
+          <DatePicker
+            value={pendingRange?.[1] || null}
+            onChange={(d) => setPendingRange([pendingRange?.[0] || null, d])}
+            placeholder="To date"
+            placement="bottomLeft"
+            popupClassName="paper-month-only"
+            allowClear
+            style={{ width: '100%' }}
+          />
+
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: '14px 0 6px' }}>Topic scope</div>
+          <Radio.Group value={pendingScope} onChange={(e) => setPendingScope(e.target.value)}>
+            <Radio value="all">All topics</Radio>
+            <Radio value="your_topic">Followed topics</Radio>
+          </Radio.Group>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+            <Button size="small" onClick={clearFilter}>Clear</Button>
+            <Button size="small" type="primary" onClick={applyFilter}>Apply</Button>
           </div>
         </div>
-      )}
+      }
+    >
+      <FilterOutlined style={{ fontSize: '30px', color: '#2563eb', cursor: 'pointer' }} title="Filter by date & topic scope" />
+    </Popover>
+  );
 
+  return (
+    <div style={{ padding: '24px 0', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
       {(topicId || keyword || activeTab === 'all' || activeTab === 'today') ? (
         // Single column layout for specific topic, search, All, or Today
         <div style={{ width: '90%', margin: '0 auto', maxWidth: '1400px' }}>
-          <Row>
+          <Row justify="center">
             <Col xs={24} lg={20}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
-                {keyword ? `Search results for: "${keyword}"` : 
-                 (topicName ? `Paper of topic: ${topicName}` : 
-                 (activeTab === 'today' ? 'Papers Today' : 'All Papers'))}
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>
+                  {keyword ? `Search results for: "${keyword}"` :
+                   (topicName ? `Paper of topic: ${topicName}` :
+                   (activeTab === 'today' ? 'Papers Today' : 'All Papers'))}
+                </span>
+                {filterIcon}
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
@@ -356,13 +417,15 @@ const PaperPage: React.FC = () => {
           </Row>
         </div>
       ) : (
-        // Split layout for personalized feed
+        // Single column layout for personalized feed
         <div style={{ width: '90%', margin: '0 auto', maxWidth: '1400px' }}>
-          <Row gutter={32}>
-            {/* Left Column: User's Feed */}
-            <Col xs={24} lg={16}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <StarFilled style={{ color: '#f59e0b' }} /> Your Topic Feed
+          <Row justify="center">
+            <Col xs={24} lg={20}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <StarFilled style={{ color: '#f59e0b' }} /> Your Topic Feed
+                </span>
+                {filterIcon}
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
@@ -379,22 +442,6 @@ const PaperPage: React.FC = () => {
                   </div>
                 </>
               )}
-            </Col>
-
-            {/* Right Column: Discover Feed */}
-            <Col xs={24} lg={8}>
-              <div style={{ position: 'sticky', top: '24px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4b5563', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CompassOutlined style={{ color: '#3b82f6' }} /> You might be interested in
-                </h3>
-                {loadingDiscover ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}><Spin /></div>
-                ) : discoverPapers.length === 0 ? (
-                  <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>No recommendations available right now.</div>
-                ) : (
-                  <div>{discoverPapers.map((p, idx) => renderPaperCard(p, true, idx))}</div>
-                )}
-              </div>
             </Col>
           </Row>
         </div>

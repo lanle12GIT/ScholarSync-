@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Spin, message, Button, Modal, Form, Input, Select, Popconfirm } from 'antd';
-import {PlusOutlined, RightOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Spin, message, Button, Modal, Form, Input, Select, Popconfirm, Popover } from 'antd';
+import {PlusOutlined, RightOutlined, EditOutlined, DeleteOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons';
 import './DashboardPage.css';
 
 import { topicApi } from '../api/topicApi';
@@ -51,7 +51,13 @@ const TopicsPage: React.FC = () => {
   const [categoryTopics, setCategoryTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [form] = Form.useForm();
+
+  // Lọc danh sách topic đang theo dõi theo tên (client-side)
+  const filteredTopics = topics.filter(t =>
+    (t.name || '').toLowerCase().includes(searchKeyword.trim().toLowerCase())
+  );
 
   const fetchTopics = async () => {
     try {
@@ -162,11 +168,33 @@ const TopicsPage: React.FC = () => {
     <div className="dashboard-container">
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '85%', margin: '0 auto 24px auto' }}>
         <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Following Topics</h2>
-        <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: '8px', fontWeight: 600 }} 
-        onClick={() => handleAddTopic()}
-        >
-          Add Topic
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Popover
+            trigger="click"
+            placement="bottomRight"
+            content={
+              <Input
+                allowClear
+                autoFocus
+                placeholder="Enter topic name..."
+                prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                style={{ width: 260 }}
+              />
+            }
+          >
+            <FilterOutlined
+              style={{ fontSize: '30px', color: '#2563eb', cursor: 'pointer' }}
+              title="Filter topics by name"
+            />
+          </Popover>
+          <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: '8px', fontWeight: 600 }}
+          onClick={() => handleAddTopic()}
+          >
+            Add Topic
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -175,7 +203,11 @@ const TopicsPage: React.FC = () => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '85%', margin: '0 auto' }}>
-          {topics.map((topic) => (
+          {filteredTopics.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#6b7280', padding: '40px 0' }}>
+              {searchKeyword ? `No topics matching "${searchKeyword}".` : 'You are not following any topics yet.'}
+            </div>
+          ) : filteredTopics.map((topic) => (
             <div key={topic.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div 
                 onClick={() => handleCardClick(topic)}
