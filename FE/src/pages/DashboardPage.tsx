@@ -210,7 +210,7 @@ const DashboardPage: React.FC = () => {
                   wrapperStyle={{ fontSize: '11px', lineHeight: '18px' }}
                   iconSize={8}
                 />
-                <Bar dataKey="Total" stackId="b" fill="#94a3b8" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="Total" name="Other topics" stackId="b" fill="#94a3b8" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 {topicNames.map((topicName, index) => (
                   <Bar key={topicName} dataKey={topicName} stackId="a" fill={COLORS[index % COLORS.length]} radius={[4, 4, 0, 0]} maxBarSize={40} />
                 ))}

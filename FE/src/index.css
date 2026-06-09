@@ -24,12 +24,24 @@
   box-sizing: border-box;
 }
 
+html, body {
+  /* Ngăn cuộn ngang khi có phần tử vô tình rộng hơn màn hình */
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--bg-color);
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ảnh / media không bao giờ tràn khung cha */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 a {

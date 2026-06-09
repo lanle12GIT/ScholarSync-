@@ -10,15 +10,18 @@ const Footer: React.FC = () => {
           <ReadOutlined style={{ color: '#2a3ba0ff' }} />Scholar Slate
         </div>
         <div className="footer-copyright">
-          2026_LETHILAN_24880226
+          2026_LeThiLan_24880226
         </div>
       </div>
 
       <div className="footer-links">
-        <span style={{ color: '#718096', fontSize: '0.9rem' }}>Powered by</span>
         <a href="https://arxiv.org" target="_blank" rel="noopener noreferrer" className="footer-link">arXiv.org</a>
         <span style={{ color: '#cbd5e0' }}>•</span>
-        <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" className="footer-link">Google Gemini</a>
+        <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer" className="footer-link">Groq</a>
+         <span style={{ color: '#cbd5e0' }}>•</span>
+        <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="footer-link">OpenrouterAi</a>
+         <span style={{ color: '#cbd5e0' }}>•</span>
+        <a href="https://open.bigmodel.cn/" target="_blank" rel="noopener noreferrer" className="footer-link">Zhipu AI</a>
       </div>
 
       <div className="footer-right">
