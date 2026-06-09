@@ -36,6 +36,10 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  line-height: 1.35;
+  /* Chừa sẵn chỗ 2 dòng để cả 4 ô cao bằng nhau, giá trị căn đều */
+  min-height: 2.7em;
+  align-items: flex-start !important;
 }
 
 .stat-value {
@@ -44,13 +48,76 @@
   color: #1f1f1f;
 }
 
+/* Lưới "Paper worth reading": 3 cột trên web, co lại trên mobile */
+.top-papers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Tablet: Paper worth reading về 2 cột */
+@media (max-width: 1024px) {
+  .top-papers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     width: 100%;
     padding: 12px 12px 24px;
   }
+  /* Ô thống kê gọn lại khi xếp 2 cột */
+  .stat-card .ant-card-body {
+    padding: 12px 14px;
+  }
+  .stat-card-header {
+    margin-bottom: 6px;
+  }
+  .stat-title {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+  }
   .stat-value {
-    font-size: 28px;
+    font-size: 24px;
+  }
+  /* Paper worth reading: về 1 cột trên điện thoại để không bị cắt chữ */
+  .top-papers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ----- Trang Topics: thẻ topic gọn lại trên mobile ----- */
+  .topics-list {
+    width: 100% !important;
+  }
+  .topic-card {
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .topic-card-img {
+    width: 52px !important;
+    height: 48px !important;
+  }
+  .topic-card-info h3 {
+    font-size: 1rem !important;
+  }
+  .topic-card-info > div:last-child {
+    font-size: 0.85rem !important;
+  }
+  /* Bớt khoảng cách cột "Total paper" và thu nhỏ số */
+  .topic-card-count {
+    padding-left: 12px !important;
+  }
+  .topic-card-count > div:first-child {
+    font-size: 0.75rem !important;
+  }
+  .topic-card-count > div:last-child {
+    font-size: 1.15rem !important;
+  }
+  /* Ẩn nút "More" trên mobile (cả thẻ đã bấm được) để chừa chỗ cho tiêu đề */
+  .topic-card-more {
+    display: none !important;
   }
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Spin, message, Button, Modal, Form, Input, Select, Popconfirm, Popover } from 'antd';
-import {PlusOutlined, RightOutlined, EditOutlined, DeleteOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons';
+import {PlusOutlined, RightOutlined, DeleteOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons';
 import './DashboardPage.css';
 
 import { topicApi } from '../api/topicApi';
@@ -202,14 +202,15 @@ const TopicsPage: React.FC = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '85%', margin: '0 auto' }}>
+        <div className="topics-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '85%', margin: '0 auto' }}>
           {filteredTopics.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#6b7280', padding: '40px 0' }}>
               {searchKeyword ? `No topics matching "${searchKeyword}".` : 'You are not following any topics yet.'}
             </div>
           ) : filteredTopics.map((topic) => (
             <div key={topic.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div 
+              <div
+                className="topic-card"
                 onClick={() => handleCardClick(topic)}
                 style={{
                   flex: 1,
@@ -236,12 +237,12 @@ const TopicsPage: React.FC = () => {
                 }}
               >
                 {/* Left: Image/Icon */}
-                <div style={{ width: '76px', height: '70px', borderRadius: '12px', overflow: 'initial'}}>
+                <div className="topic-card-img" style={{ width: '76px', height: '70px', borderRadius: '12px', overflow: 'initial'}}>
                   {getCategoryImage(topic.topicCateg)}
                 </div>
-                
+
                 {/* Middle: Title and Key */}
-                <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="topic-card-info" style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
                       {topic.name}
@@ -255,17 +256,18 @@ const TopicsPage: React.FC = () => {
                 </div>
                 
                 {/* Right: Articles Count */}
-                <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '24px', borderLeft: '1px solid #f3f4f6' }}>
+                <div className="topic-card-count" style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '24px', borderLeft: '1px solid #f3f4f6' }}>
                   <div style={{ color: '#6b7280', fontSize: '1.05rem', marginBottom: '4px' }}>Total paper</div>
                   <div style={{ fontWeight: 700, color: '#17da17ff', fontSize: '1.5rem' }}>{topic.paperCount || 0}</div>
                 </div>
-                <div 
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <div
+                  className="topic-card-more"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: '4px',
-                    color: '#4069b9', 
-                    fontSize: '0.9rem', 
+                    color: '#4069b9',
+                    fontSize: '0.9rem',
                     fontWeight: 600,
                     padding: '6px 14px',
                     borderRadius: '20px',
@@ -289,21 +291,6 @@ const TopicsPage: React.FC = () => {
 
               {/* Action Icons outside the card */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                <div
-                  onClick={(e) => { e.stopPropagation(); message.info(`Edit topic: ${topic.name}`); }}
-                  style={{
-                    width: '36px', height: '36px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderRadius: '10px',
-                    background: '#dce0e6ff',
-                    color: '#1a1919ff',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#a6a1aaff'; e.currentTarget.style.color = '#fff'; }}
-                >
-                  <EditOutlined style={{ fontSize: '16px' }} />
-                </div>
                 <Popconfirm
                   title="Are you sure you want to delete this topic?"
                   description={

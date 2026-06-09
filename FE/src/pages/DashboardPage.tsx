@@ -113,7 +113,7 @@ const DashboardPage: React.FC = () => {
 
   const stats = [
     { title: 'YOUR TOPICS', value: statsData.topicCount.toString(), extra: '', extraColor: '#52c41a', bgColor: '#ffffff', icon: <FolderOpenOutlined style={{ color: '#1677ff', fontSize: '16px' }} /> },
-    { title: 'NEW PAPERS ( TOPIC FOLLOWED)', value: statsData.newPaperCount.toString(), bgColor: '#ffffff', icon: <FileTextOutlined style={{ color: '#52c41a', fontSize: '16px' }} /> },
+    { title: <>NEW PAPERS<br />(Topic followed)</>, value: statsData.newPaperCount.toString(), bgColor: '#ffffff', icon: <FileTextOutlined style={{ color: '#52c41a', fontSize: '16px' }} /> },
     { title: 'FAVORITE PAPERS', value: statsData.favoriteCount.toString(), bgColor: '#ffffff', icon: <HeartOutlined style={{ color: '#fa8c16', fontSize: '16px' }} /> },
     { title: 'NOTIFICATIONS', value: statsData.notificationCount.toString(), bgColor: '#ffffff', icon: <BellOutlined style={{ color: '#722ed1', fontSize: '16px' }} /> },
   ];
@@ -126,7 +126,7 @@ const DashboardPage: React.FC = () => {
       </div>
       <Row gutter={[16, 16]} className="stats-row">
         {stats.map((stat, index) => (
-          <Col xs={24} sm={12} md={6} key={index}>
+          <Col xs={12} sm={12} md={6} key={index}>
             <Card className="stat-card" variant="outlined" style={{ backgroundColor: stat.bgColor, border: '1.5px solid #d1d5db' }}>
               <div className="stat-card-header">
                 <Text type="secondary" className="stat-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -231,7 +231,7 @@ const DashboardPage: React.FC = () => {
           <div style={{ textAlign: 'center', padding: '40px 0' }}><Spin /></div>
         ) : topPapers.length > 0 ? (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            <div className="top-papers-grid">
               {topPapers.map((paper) => {
                 const footerBg = '#f9fafb';
 

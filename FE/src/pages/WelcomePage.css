@@ -398,9 +398,28 @@
     gap: 0.5rem !important;
   }
 
+  /* Hàng menu giữ trên 1 dòng, không xuống dòng */
+  .navbar-bottom > div:first-child {
+    flex-wrap: nowrap;
+    gap: 0 !important;
+    width: 100%;
+  }
+
   .nav-menu-item {
-    padding: 0 0.6rem;
-    font-size: 14px;
+    padding: 0 0.4rem;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* Thu nhỏ khoảng cách icon trong mục menu */
+  .nav-menu-item > span:first-child {
+    margin-right: 4px !important;
+    font-size: 13px;
+  }
+
+  /* Bớt vạch ngăn để tiết kiệm chỗ */
+  .navbar-bottom .nav-menu-divider {
+    margin: 0 -2px;
   }
 
   /* Ô tìm kiếm: bỏ width 400px cố định, co theo màn hình */
@@ -448,6 +467,21 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
+  }
+}
+
+/* Điện thoại nhỏ: đảm bảo menu vừa đúng 1 dòng */
+@media (max-width: 480px) {
+  .nav-menu-item {
+    padding: 0 0.3rem;
+    font-size: 12px;
+  }
+  /* Ẩn icon trong menu để 4 mục chắc chắn nằm gọn 1 dòng */
+  .nav-menu-item > span:first-child {
+    display: none !important;
+  }
+  .navbar-bottom .nav-menu-divider {
+    margin: 0 -1px;
   }
 }
 
