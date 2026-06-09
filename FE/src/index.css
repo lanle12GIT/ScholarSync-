@@ -25,9 +25,34 @@
 }
 
 html, body {
-  /* Ngăn cuộn ngang khi có phần tử vô tình rộng hơn màn hình */
+  /* Lưới an toàn: ngăn cuộn ngang nếu còn phần tử lỡ rộng hơn màn hình */
   overflow-x: hidden;
   max-width: 100%;
+}
+
+/*
+ * Thu nhỏ toàn bộ giao diện trên màn hình nhỏ.
+ * Vì phần lớn kích thước dùng đơn vị rem (kế thừa từ font-size của <html>),
+ * giảm font-size gốc sẽ làm CHỮ và KHUNG co nhỏ đồng loạt cho vừa màn hình,
+ * thay vì bị cắt bớt. Mặc định trình duyệt là 16px.
+ */
+html {
+  font-size: 16px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  html { font-size: 15px; }
+}
+
+/* Điện thoại */
+@media (max-width: 768px) {
+  html { font-size: 14px; }
+}
+
+/* Điện thoại nhỏ */
+@media (max-width: 480px) {
+  html { font-size: 13px; }
 }
 
 body {
