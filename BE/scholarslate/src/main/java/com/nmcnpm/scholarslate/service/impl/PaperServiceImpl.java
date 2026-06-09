@@ -47,22 +47,40 @@ public class PaperServiceImpl implements PaperService {
         return paperMapper.toDto(paper);
     }
 
+    // Khoảng thời gian không gọi lại AI cho bài đã thử mà thất bại (chống spam call khi bị rate-limit)
+    private static final java.time.Duration AI_RETRY_WINDOW = java.time.Duration.ofHours(6);
+
+    private boolean isRecentlyAttempted(java.time.LocalDateTime attemptedAt) {
+        return attemptedAt != null
+                && attemptedAt.isAfter(java.time.LocalDateTime.now().minus(AI_RETRY_WINDOW));
+    }
+
     @Override
     @Transactional
     public String summarizePaper(Long id) {
         Paper paper = paperRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Paper not found with id: " + id));
 
+        // Đã có summary hợp lệ -> trả về luôn, không gọi AI
         if (paper.getSummary() != null && !paper.getSummary().trim().isEmpty()) {
             return paper.getSummary();
         }
 
-        String summary = aiService.summarizeText(paper.getAbstractText());
-        if (summary != null) {
-            paper.setSummary(summary);
-            paperRepository.save(paper);
+        // Vừa thử gần đây mà chưa có kết quả -> không gọi lại AI trong vòng AI_RETRY_WINDOW
+        if (isRecentlyAttempted(paper.getSummaryAttemptedAt())) {
+            return paper.getSummary();
         }
-        return summary;
+
+        // Đánh dấu "đã thử" TRƯỚC khi gọi: dù gọi lỗi cũng không retry ngay ở lần sau
+        paper.setSummaryAttemptedAt(java.time.LocalDateTime.now());
+
+        String summary = aiService.summarizeText(paper.getAbstractText());
+        // Chỉ lưu khi có nội dung thật, KHÔNG lưu chuỗi rỗng "" (tránh vòng lặp tóm tắt lại vô tận)
+        if (summary != null && !summary.trim().isEmpty()) {
+            paper.setSummary(summary);
+        }
+        paperRepository.save(paper);
+        return paper.getSummary();
     }
 
     @Override
@@ -75,12 +93,18 @@ public class PaperServiceImpl implements PaperService {
             return paper.getPoint();
         }
 
+        if (isRecentlyAttempted(paper.getScoreAttemptedAt())) {
+            return paper.getPoint();
+        }
+
+        paper.setScoreAttemptedAt(java.time.LocalDateTime.now());
+
         Float point = aiService.scorePaper(paper.getAbstractText());
         if (point != null) {
             paper.setPoint(point);
-            paperRepository.save(paper);
         }
-        return point;
+        paperRepository.save(paper);
+        return paper.getPoint();
     }
 
     // ==================== Helper Methods ====================
@@ -119,7 +143,7 @@ public class PaperServiceImpl implements PaperService {
         List<Long> topicIds = userTopicRepository.findByUser(user).stream()
                 .map(ut -> ut.getTopic().getId())
                 .collect(Collectors.toList());
-        
+
         Pageable pageable = createPageable(page, size);
 
         if (topicIds == null || topicIds.isEmpty()) {
@@ -127,24 +151,6 @@ public class PaperServiceImpl implements PaperService {
         }
 
         return buildPageResponse(paperRepository.findByUserTopics(topicIds, pageable));
-    }
-
-    @Override
-    public PaperPageResponse getDiscoverFeed(String email, int page, int size) {
-        com.nmcnpm.scholarslate.entity.User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
-
-        List<Long> topicIds = userTopicRepository.findByUser(user).stream()
-                .map(ut -> ut.getTopic().getId())
-                .collect(Collectors.toList());
-                
-        Pageable pageable = createPageable(page, size);
-
-        if (topicIds == null || topicIds.isEmpty()) {
-            return buildPageResponse(paperRepository.findAll(pageable));
-        }
-
-        return buildPageResponse(paperRepository.findByOtherTopics(topicIds, pageable));
     }
 
     @Override

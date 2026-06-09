@@ -44,6 +44,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
         List<Topic> topics = topicRepository.findByKeyIsNotNull();
         if (topics == null || topics.isEmpty()) {
             log.warn("No topics with a valid 'key' found in the database. Synchronization aborted.");
+            log.info("=== [CHAY NEN] HOAN TAT SYNC PAPERS: ko có topic hop le ===");
             return;
         }
 
@@ -128,17 +129,22 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
 
                             String summary = aiService.summarizeText(abstractText);
                             Float point = aiService.scorePaper(abstractText);
+                            LocalDateTime now = LocalDateTime.now();
 
                             Paper paper = Paper.builder()
                                     .arxivId(arxivId)
                                     .title(title != null ? title.replace("\n", " ").trim() : "")
                                     .abstractText(abstractText != null ? abstractText.trim() : "")
-                                    .summary(summary)
+                                    // Không lưu chuỗi rỗng khi tóm tắt thất bại
+                                    .summary(summary != null && !summary.trim().isEmpty() ? summary : null)
                                     .point(point)
                                     .authors(authors)
                                     .link("https://arxiv.org/html/" + arxivId)
                                     .publishedAt(publishedAt)
-                                    .fetchedAt(LocalDateTime.now())
+                                    .fetchedAt(now)
+                                    // Đã thử AI ngay lúc tạo -> ghi mốc để không bị thử lại dồn dập
+                                    .summaryAttemptedAt(now)
+                                    .scoreAttemptedAt(now)
                                     .build();
 
                             paper.getTopics().add(topic);
@@ -160,7 +166,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                 log.error("Error fetching papers for topic " + category, e);
             }
         }
-        log.info("=== HOÀN TẤT SYNC PAPERS ===");
+        log.info("=== HOAN TAT SYNC PAPERS ===");
     }
 
     private String getTagValue(String tag, Element element) {
@@ -198,12 +204,20 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
     @org.springframework.scheduling.annotation.Async
     public void scoreMissingPapers() {
         log.info("Starting background job to score all missing papers...");
-        java.util.List<com.nmcnpm.scholarslate.entity.Paper> missingPapers = paperRepository.findByPointIsNull();
-        log.info("Found {} papers with missing score.", missingPapers.size());
+        // Chỉ lấy bài chưa thử (hoặc đã thử cách đây > 6h) và giới hạn 50 bài/lần chạy
+        // -> không quét lại toàn bộ backlog bài đang bị rate-limit mỗi lần chạy.
+        LocalDateTime retryThreshold = LocalDateTime.now().minusHours(6);
+        int batchLimit = 50;
+        java.util.List<com.nmcnpm.scholarslate.entity.Paper> missingPapers =
+                paperRepository.findUnscoredForRetry(retryThreshold,
+                        org.springframework.data.domain.PageRequest.of(0, batchLimit));
+        log.info("Found {} papers needing score (giới hạn {}).", missingPapers.size(), batchLimit);
 
         int count = 0;
         for (com.nmcnpm.scholarslate.entity.Paper paper : missingPapers) {
             try {
+                // Đánh dấu "đã thử" để lần chạy sau không chấm lại ngay nếu lần này lỗi
+                paper.setScoreAttemptedAt(LocalDateTime.now());
                 Float point = aiService.scorePaper(paper.getAbstractText());
                 if (point != null) {
                     paper.setPoint(point);
@@ -211,15 +225,17 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                 } else {
                     log.warn("Failed to score paper {}", paper.getArxivId());
                 }
-                
+
                 // Nghỉ 10s trước khi gọi API summary để không bị dính rate limit
                 Thread.sleep(10_000);
 
                 String summary = paper.getSummary();
                 if (summary == null || summary.trim().isEmpty()) {
-                    summary = aiService.summarizeText(paper.getAbstractText());
-                    if (summary != null) {
-                        paper.setSummary(summary);
+                    paper.setSummaryAttemptedAt(LocalDateTime.now());
+                    String newSummary = aiService.summarizeText(paper.getAbstractText());
+                    // KHÔNG lưu chuỗi rỗng khi thất bại
+                    if (newSummary != null && !newSummary.trim().isEmpty()) {
+                        paper.setSummary(newSummary);
                         log.info("Summarized paper {}", paper.getArxivId());
                     }
                 }

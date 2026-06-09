@@ -72,19 +72,9 @@ public class PaperController {
             org.springframework.security.core.Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        com.nmcnpm.scholarslate.security.services.UserDetailsImpl userDetails = 
+        com.nmcnpm.scholarslate.security.services.UserDetailsImpl userDetails =
                 (com.nmcnpm.scholarslate.security.services.UserDetailsImpl) authentication.getPrincipal();
         return ResponseEntity.ok(paperService.getUserFeed(userDetails.getEmail(), page, size));
-    }
-
-    @GetMapping("/feed/discover")
-    public ResponseEntity<PaperPageResponse> getDiscoverFeed(
-            org.springframework.security.core.Authentication authentication,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        com.nmcnpm.scholarslate.security.services.UserDetailsImpl userDetails = 
-                (com.nmcnpm.scholarslate.security.services.UserDetailsImpl) authentication.getPrincipal();
-        return ResponseEntity.ok(paperService.getDiscoverFeed(userDetails.getEmail(), page, size));
     }
 
     @GetMapping("/top-rated")

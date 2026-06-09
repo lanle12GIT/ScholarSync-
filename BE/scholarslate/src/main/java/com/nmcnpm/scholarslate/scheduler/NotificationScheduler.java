@@ -13,10 +13,10 @@ public class NotificationScheduler {
 
     private final NotificationService notificationService;
 
-    // Chạy vào 11:30 mỗi ngày
-    @Scheduled(cron = "0 30 11 * * *")
+    // Chạy 1 lần/ngày lúc 13:00 (sau khi cả 2 lần sync 08:30 & 10:30 đã hoàn tất)
+    @Scheduled(cron = "0 0 13 * * *")
     public void scheduleDailyNotifications() {
-        log.info("Bắt đầu chạy tự động lập lịch (cron 11h30) để tạo thông báo hằng ngày...");
+        log.info("Bat dau tao thong bao");
         notificationService.generateDailyNotifications();
     }
 }

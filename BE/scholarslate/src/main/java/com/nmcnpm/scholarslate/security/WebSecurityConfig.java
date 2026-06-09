@@ -58,8 +58,9 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/notifications/generate").permitAll()
-                    .requestMatchers("/api/admin/sync/arxiv").permitAll()
+                    .requestMatchers("/api/admin/sync/**").permitAll()
                     .requestMatchers("/error").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/papers/search", "/api/papers/{id}", "/api/papers/top-rated").permitAll()
                     .anyRequest().authenticated()
             );
         

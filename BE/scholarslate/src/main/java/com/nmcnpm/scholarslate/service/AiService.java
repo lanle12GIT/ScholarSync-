@@ -31,6 +31,15 @@ public class AiService {
     @Value("${grok.api.url}")
     private String groqUrl;
 
+    @Value("${zhipu.api.key}")
+    private String zhipuApiKey;
+
+    @Value("${zhipu.api.url}")
+    private String zhipuUrl;
+
+    @Value("${zhipu.api.model}")
+    private String zhipuModel;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     
@@ -66,7 +75,7 @@ public class AiService {
             JsonNode rootNode = objectMapper.readTree(response);
             return rootNode.path("choices").get(0).path("message").path("content").asText().trim();
         } catch (Exception e) {
-            log.error("Lỗi khi gọi API tới {}: {}", url, e.getMessage());
+            log.error("loi khi goi toi API {}: {}", url, e.getMessage());
             return null;
         }
     }
@@ -78,12 +87,17 @@ public class AiService {
 
         String prompt = "Summarize the following scientific abstract into 3-4 concise and easy-to-understand sentences. You MUST output ONLY the summary strictly in English. DO NOT include any introductory or concluding text like 'Here is a summary':\n\n" + text;
 
-        // Gọi Groq trước với cơ chế xoay vòng Key (Round-Robin)
-        String currentGroqKey = getNextGroqKey();
-        String result = callOpenAiCompatibleApi(text, prompt, groqUrl, currentGroqKey, "llama-3.1-8b-instant");
-        
+        // Goi Zhipu AI (GLM) truoc
+        String result = callOpenAiCompatibleApi(text, prompt, zhipuUrl, zhipuApiKey, zhipuModel);
+
         if (result == null) {
-            log.warn("Lỗi gọi Groq. Chuyển sang OpenRouter API làm fallback...");
+            log.warn("loi goi Zhipu AI (GLM). chuyen sang Groq lam fallback...");
+            String currentGroqKey = getNextGroqKey();
+            result = callOpenAiCompatibleApi(text, prompt, groqUrl, currentGroqKey, "llama-3.1-8b-instant");
+        }
+
+        if (result == null) {
+            log.warn("loi goi Groq. chuyen sang OpenRouter API lam fallback...");
             result = callOpenAiCompatibleApi(text, prompt, openrouterUrl, openrouterApiKey, "meta-llama/llama-3.2-3b-instruct:free");
         }
 
@@ -104,12 +118,17 @@ public class AiService {
                 "You MUST output ONLY a single integer number between 0 and 100 representing the total score. " +
                 "DO NOT output any explanation, text, or markdown, ONLY the number.\n\nAbstract:\n" + abstractText;
 
-        // Gọi Groq trước với cơ chế xoay vòng Key (Round-Robin)
-        String currentGroqKey = getNextGroqKey();
-        String resultText = callOpenAiCompatibleApi(abstractText, prompt, groqUrl, currentGroqKey, "llama-3.1-8b-instant");
-        
+        // Goi Zhipu AI (GLM) truoc
+        String resultText = callOpenAiCompatibleApi(abstractText, prompt, zhipuUrl, zhipuApiKey, zhipuModel);
+
         if (resultText == null) {
-            log.warn("Lỗi gọi Groq cho score. Chuyển sang OpenRouter API làm fallback...");
+            log.warn("Loi goi Zhipu AI (GLM) cho score. Chuyen sang Groq lam fallback...");
+            String currentGroqKey = getNextGroqKey();
+            resultText = callOpenAiCompatibleApi(abstractText, prompt, groqUrl, currentGroqKey, "llama-3.1-8b-instant");
+        }
+
+        if (resultText == null) {
+            log.warn("Loi goi Groq cho score. Chuyen sang OpenRouter API làm fallback...");
             resultText = callOpenAiCompatibleApi(abstractText, prompt, openrouterUrl, openrouterApiKey, "meta-llama/llama-3.2-3b-instruct:free");
         }
 
@@ -117,7 +136,7 @@ public class AiService {
             try {
                 return Float.parseFloat(resultText);
             } catch (NumberFormatException ex) {
-                log.error("Không thể parse kết quả thành Float: {}", resultText);
+                log.error("khong the chuyen ket qua thanh Float: {}", resultText);
             }
         }
         return null;

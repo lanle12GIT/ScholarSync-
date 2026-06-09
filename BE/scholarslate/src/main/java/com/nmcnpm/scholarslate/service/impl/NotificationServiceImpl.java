@@ -11,7 +11,9 @@ import com.nmcnpm.scholarslate.repository.PaperRepository;
 import com.nmcnpm.scholarslate.repository.UserTopicRepository;
 import com.nmcnpm.scholarslate.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ import com.nmcnpm.scholarslate.entity.UserTopic;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
@@ -73,11 +76,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
     public void generateDailyNotifications() {
+        log.info("=== [CHAY NEN] tao thong bao===");
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         List<Paper> papersFetchedToday = paperRepository.findByFetchedAtAfter(startOfDay);
 
-        if (papersFetchedToday.isEmpty()) return;
+        if (papersFetchedToday.isEmpty()) {
+            log.info("=== [CHAY NEN] tao thong bao, khong co bai bao nao ca ===");
+            return;
+        }
 
         Map<Topic, Long> newPapersPerTopic = new HashMap<>();
         for (Paper paper : papersFetchedToday) {

@@ -48,6 +48,14 @@ public class Paper {
     @Column(name = "point")
     private Float point;
 
+    // Mốc lần gần nhất gọi AI để tóm tắt / chấm điểm (kể cả khi thất bại).
+    // Dùng để KHÔNG gọi lại AI cho bài đã thử trong vòng AI_RETRY_WINDOW -> tránh spam call khi bị rate-limit.
+    @Column(name = "summary_attempted_at")
+    private LocalDateTime summaryAttemptedAt;
+
+    @Column(name = "score_attempted_at")
+    private LocalDateTime scoreAttemptedAt;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "paper_topic",

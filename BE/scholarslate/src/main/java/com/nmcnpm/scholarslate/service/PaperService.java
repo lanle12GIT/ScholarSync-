@@ -33,11 +33,6 @@ public interface PaperService {
     PaperPageResponse getUserFeed(String email, int page, int size);
 
     /**
-     * Lấy danh sách paper cho feed khám phá
-     */
-    PaperPageResponse getDiscoverFeed(String email, int page, int size);
-
-    /**
      * Lấy danh sách bài báo đáng đọc (điểm cao >= 80)
      */
     PaperPageResponse getTopRatedPapers(int page, int size);

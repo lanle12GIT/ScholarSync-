@@ -16,13 +16,16 @@ public interface PaperRepository extends JpaRepository<Paper, Long>, PaperReposi
     boolean existsByArxivId(String arxivId);
     java.util.List<Paper> findByFetchedAtAfter(java.time.LocalDateTime fetchedAt);
     java.util.List<Paper> findByPointIsNull();
+
+    // Lấy các bài chưa có điểm và CHƯA thử (hoặc đã thử trước mốc threshold) -> tránh chấm lại bài vừa bị rate-limit
+    @Query("SELECT p FROM Paper p WHERE p.point IS NULL " +
+           "AND (p.scoreAttemptedAt IS NULL OR p.scoreAttemptedAt < :threshold) " +
+           "ORDER BY p.fetchedAt DESC")
+    java.util.List<Paper> findUnscoredForRetry(@Param("threshold") java.time.LocalDateTime threshold, Pageable pageable);
     Page<Paper> findByPointGreaterThanEqual(Float point, Pageable pageable);
 
     @Query("SELECT p FROM Paper p WHERE EXISTS (SELECT t.id FROM p.topics t WHERE t.id IN :topicIds)")
     Page<Paper> findByUserTopics(@Param("topicIds") java.util.List<Long> topicIds, Pageable pageable);
-
-    @Query("SELECT p FROM Paper p WHERE NOT EXISTS (SELECT t.id FROM p.topics t WHERE t.id IN :topicIds)")
-    Page<Paper> findByOtherTopics(@Param("topicIds") java.util.List<Long> topicIds, Pageable pageable);
 
     @Query("SELECT COUNT(p) FROM Paper p WHERE EXISTS (SELECT t.id FROM p.topics t WHERE t.id IN :topicIds)")
     long countByUserTopics(@Param("topicIds") java.util.List<Long> topicIds);
