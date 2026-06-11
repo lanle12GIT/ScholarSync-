@@ -237,7 +237,7 @@ const PaperDetailPage: React.FC = () => {
             </div>
             
             {/* Middle: Title & Meta */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h2 className="paper-detail-title" style={{ margin: 0, textAlign: 'left' }}>
                 {paper.title}
               </h2>
@@ -247,8 +247,9 @@ const PaperDetailPage: React.FC = () => {
                 <span className="paper-detail-meta-info">
                   <CalendarOutlined /> {paper.publishedAt ? new Date(paper.publishedAt).toLocaleDateString('en-GB') : 'Unknown Date'}
                 </span>
-                <span className="paper-detail-meta-info">
-                  <UserOutlined /> {paper.authors || 'Unknown Authors'}
+                <span className="paper-detail-meta-info paper-detail-meta-authors">
+                  <UserOutlined />
+                  <span className="paper-detail-authors-clamp">{paper.authors || 'Unknown Authors'}</span>
                 </span>
               </div>
               
@@ -390,7 +391,7 @@ const PaperDetailPage: React.FC = () => {
               <div className="paper-detail-info-row">
                 <UserOutlined />
                 <strong>Authors:</strong>
-                <span style={{ flex: 1 }}>{paper.authors || '—'}</span>
+                <span className="paper-detail-authors-clamp" style={{ flex: 1, minWidth: 0 }}>{paper.authors || '—'}</span>
               </div>
               {paper.link && (
                 <div className="paper-detail-info-row">

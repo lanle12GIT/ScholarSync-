@@ -151,17 +151,23 @@ const FavoritesPage: React.FC = () => {
                       </div>
                     )}
                     
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px', color: '#6b7280', fontSize: '14px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserOutlined /> {paper.authors || 'Unknown Authors'}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {paper.publishedAt ? new Date(paper.publishedAt).toLocaleDateString('en-GB') : 'Unknown Date'}</span>
-                      <Link 
+                    <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: '16px', marginBottom: '16px', color: '#6b7280', fontSize: '14px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '0 1 auto', minWidth: 0 }}>
+                        <UserOutlined style={{ flexShrink: 0 }} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {paper.authors || 'Unknown Authors'}
+                        </span>
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, whiteSpace: 'nowrap' }}><CalendarOutlined /> {paper.publishedAt ? new Date(paper.publishedAt).toLocaleDateString('en-GB') : 'Unknown Date'}</span>
+                      <Link
                         to={`/paper/${paper.id}`}
                         onClick={(e) => e.stopPropagation()}
+                        style={{ flexShrink: 0 }}
                       >
-                        <Button 
-                          type="primary" 
-                          size="small" 
-                          icon={<LinkOutlined/>} 
+                        <Button
+                          type="primary"
+                          size="small"
+                          icon={<LinkOutlined/>}
                           style={{ background: '#d6632eff', borderRadius: '6px', fontWeight: 600 }}
                         >
                         View Detail
@@ -171,7 +177,7 @@ const FavoritesPage: React.FC = () => {
                         size="small"
                         icon={<HeartFilled style={{ color: '#ef4444' }} />}
                         onClick={(e) => handleUnfavorite(e, paper.id)}
-                        style={{ borderRadius: '6px', borderColor: '#fca5a5', marginLeft: 'auto' }}
+                        style={{ borderRadius: '6px', borderColor: '#fca5a5', marginLeft: 'auto', flexShrink: 0 }}
                         title="Remove from favorites"
                       />
                     </div>

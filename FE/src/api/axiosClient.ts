@@ -40,9 +40,13 @@ axiosClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as any;
 
+    // Login/Register/Logout: a 401 here means bad credentials, NOT an expired token.
+    // Skip the refresh-token flow so the real error message propagates to the form.
+    const isAuthEndpoint = typeof originalRequest?.url === 'string' && originalRequest.url.includes('/auth/');
+
     if (error.response) {
       // Handle 401 Unauthorized (Token expired)
-      if (error.response.status === 401 && originalRequest && !originalRequest._retry) {
+      if (error.response.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
         originalRequest._retry = true;
 
         try {

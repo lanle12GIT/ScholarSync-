@@ -6,6 +6,13 @@ import { EyeInvisibleOutlined, EyeOutlined, ReadOutlined } from '@ant-design/ico
 import { authApi } from '../api/authApi';
 import './AuthPage.css';
 
+type FieldErrors = {
+  username?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
 const AuthPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -22,29 +29,58 @@ const AuthPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Error messages
-  const [confirmError, setConfirmError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState('');
-  const [emailError, setEmailError] = useState(false);
+
+  // Xóa lỗi của 1 field khi người dùng bắt đầu gõ lại
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors(prev => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   const switchTab = (path: string) => {
-    setConfirmError('');
+    setFieldErrors({});
     setApiError('');
     navigate(path);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setConfirmError('');
-    setApiError('');
-    setEmailError(false);
+  // Kiểm tra phía client trước khi gọi API: hiển thị lỗi đỏ ngay dưới từng ô
+  const validate = (): FieldErrors => {
+    const errors: FieldErrors = {};
+
+    if (!isLogin && !username.trim()) {
+      errors.username = 'Please enter your username.';
+    }
+
+    if (!email.trim()) {
+      errors.email = 'Please enter your email.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    if (!password) {
+      errors.password = 'Please enter your password.';
+    }
 
     if (!isLogin) {
-      // Check confirm password
-      if (password !== confirmPassword) {
-        setConfirmError('Passwords do not match!');
-        return;
+      if (!confirmPassword) {
+        errors.confirmPassword = 'Please confirm your password.';
+      } else if (password !== confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match!';
       }
+    }
 
+    return errors;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError('');
+
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    if (!isLogin) {
       // Call register API
       setLoading(true);
       try {
@@ -55,10 +91,9 @@ const AuthPage: React.FC = () => {
         // err is already unwrapped by axiosClient interceptor = error.response.data (string or object)
         const msg = typeof err === 'string' ? err : (err?.message || '');
         if (msg.includes('Email is already in use')) {
-          setApiError('This email is already in use!');
-          setEmailError(true);
+          setFieldErrors({ email: 'This email is already in use!' });
         } else if (msg.includes('Username is already taken')) {
-          setApiError('Username is already taken!');
+          setFieldErrors({ username: 'Username is already taken!' });
         } else {
           setApiError(msg || 'An error occurred. Please try again.');
         }
@@ -80,7 +115,13 @@ const AuthPage: React.FC = () => {
         navigate('/dashboard');
       } catch (err: any) {
         const msg = typeof err === 'string' ? err : (err?.message || '');
-        setApiError(msg || 'Incorrect email or password.');
+        const lower = msg.toLowerCase();
+        // Bad credentials / generic 401 -> friendly message; keep any other meaningful error as-is.
+        if (!msg || lower.includes('bad credentials') || lower.includes('unauthorized') || lower.includes('401')) {
+          setApiError('Incorrect email or password.');
+        } else {
+          setApiError(msg);
+        }
       } finally {
         setLoading(false);
       }
@@ -95,13 +136,13 @@ const AuthPage: React.FC = () => {
       </div>
       <div className="auth-card">
         <div className="auth-tabs">
-          <div 
+          <div
             className={`auth-tab ${isLogin ? 'active' : ''}`}
             onClick={() => switchTab('/login')}
           >
             Login
           </div>
-          <div 
+          <div
             className={`auth-tab ${!isLogin ? 'active' : ''}`}
             onClick={() => switchTab('/register')}
           >
@@ -114,39 +155,39 @@ const AuthPage: React.FC = () => {
           <p className="auth-subtitle">Access your knowledge treasury</p>
         </div>
 
-        
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {!isLogin && (
             <div className="form-group">
               <label className="form-label">Username</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Enter your username" 
+              <input
+                type="text"
+                className={`form-input ${fieldErrors.username ? 'form-input-error' : ''}`}
+                placeholder="Enter your username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  clearFieldError('username');
+                }}
               />
+              {fieldErrors.username && <span className="form-error-text">{fieldErrors.username}</span>}
             </div>
           )}
 
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input 
-              type="email" 
-              className={`form-input ${emailError ? 'form-input-error' : ''}`}
-              placeholder="email@scholar-slate.com" 
+            <input
+              type="email"
+              className={`form-input ${fieldErrors.email ? 'form-input-error' : ''}`}
+              placeholder="email@scholar-slate.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (emailError) {
-                  setEmailError(false);
-                  setApiError('');
-                }
+                clearFieldError('email');
               }}
-              required
             />
+            {fieldErrors.email && <span className="form-error-text">{fieldErrors.email}</span>}
           </div>
 
           <div className="form-group">
@@ -155,55 +196,57 @@ const AuthPage: React.FC = () => {
               {isLogin && <a href="#" className="forgot-password">Forgot password?</a>}
             </div>
             <div className="password-input-wrapper">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                className="form-input" 
+              <input
+                type={showPassword ? "text" : "password"}
+                className={`form-input ${fieldErrors.password ? 'form-input-error' : ''}`}
                 placeholder="******"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearFieldError('password');
+                }}
               />
-              <span 
+              <span
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
               </span>
             </div>
+            {fieldErrors.password && <span className="form-error-text">{fieldErrors.password}</span>}
           </div>
 
           {!isLogin && (
             <div className="form-group">
               <label className="form-label">Confirm password</label>
               <div className="password-input-wrapper">
-                <input 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  className={`form-input ${confirmError ? 'form-input-error' : ''}`}
-                  placeholder="******" 
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  className={`form-input ${fieldErrors.confirmPassword ? 'form-input-error' : ''}`}
+                  placeholder="******"
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
-                    if (confirmError) setConfirmError('');
+                    clearFieldError('confirmPassword');
                   }}
-                  required
                 />
-                <span 
+                <span
                   className="password-toggle"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
                 </span>
               </div>
-              {confirmError && <span className="form-error-text">{confirmError}</span>}
+              {fieldErrors.confirmPassword && <span className="form-error-text">{fieldErrors.confirmPassword}</span>}
             </div>
           )}
           {apiError && (
           <div className="auth-error">* {apiError}</div>
         )}
 
-          <Button 
-            type="primary" 
-            htmlType="submit" 
+          <Button
+            type="primary"
+            htmlType="submit"
             className="auth-submit-btn"
             size="large"
             loading={loading}

@@ -45,10 +45,24 @@
 
 .paper-detail-meta {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+  min-width: 0;
+}
+
+/* arXiv ID + ngày giữ nguyên kích thước, chỉ phần tác giả co lại */
+.paper-detail-meta > .paper-detail-meta-tag,
+.paper-detail-meta > .paper-detail-meta-info:not(.paper-detail-meta-authors) {
+  flex-shrink: 0;
+}
+
+/* Màn hình nhỏ: cho phép xuống dòng nếu quá chật */
+@media (max-width: 640px) {
+  .paper-detail-meta {
+    flex-wrap: wrap;
+  }
 }
 
 .paper-detail-meta-tag {
@@ -77,6 +91,24 @@
   font-size: 14.5px;
   line-height: 1.6;
   margin: 0;
+}
+
+/* Danh sách tác giả: tối đa 1 dòng, phần dư hiển thị "..." */
+.paper-detail-authors-clamp {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Header: tác giả nằm cùng hàng với ngày, co lại khi quá dài */
+.paper-detail-meta-authors {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.paper-detail-meta-authors .anticon {
+  flex-shrink: 0;
 }
 
 /* --- Main Content (iframe + summary) --- */
