@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -39,13 +40,13 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
 
     @Async
     @Override
-    public void syncPapers() {
-        log.info("=== BẮT ĐẦU SYNC PAPERS (chạy nền) ===");
+    public CompletableFuture<Void> syncPapers() {
+        log.info("=== BAT DAU SYNC PAPERS (chay nen) ===");
         List<Topic> topics = topicRepository.findByKeyIsNotNull();
         if (topics == null || topics.isEmpty()) {
             log.warn("No topics with a valid 'key' found in the database. Synchronization aborted.");
             log.info("=== [CHAY NEN] HOAN TAT SYNC PAPERS: ko có topic hop le ===");
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         RestTemplate restTemplate = new RestTemplate();
@@ -90,8 +91,8 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                             if (paperRepository.existsByArxivId(arxivId)) {
                                 // Paper exists. Since we sort by newest, if we hit an existing paper,
                                 // it means we've likely processed all newer ones. We can just skip it.
-                                log.info("Found existing paper {}, breaking loop for topic.", arxivId);
-                                break;
+                                log.info("Found existing paper {}, continue loop for topic.", arxivId);
+                                continue;
                             }
 
                             String title = getTagValue("title", element);
@@ -167,6 +168,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
             }
         }
         log.info("=== HOAN TAT SYNC PAPERS ===");
+        return CompletableFuture.completedFuture(null);
     }
 
     private String getTagValue(String tag, Element element) {
@@ -204,10 +206,9 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
     @org.springframework.scheduling.annotation.Async
     public void scoreMissingPapers() {
         log.info("Starting background job to score all missing papers...");
-        // Chỉ lấy bài chưa thử (hoặc đã thử cách đây > 6h) và giới hạn 50 bài/lần chạy
-        // -> không quét lại toàn bộ backlog bài đang bị rate-limit mỗi lần chạy.
-        LocalDateTime retryThreshold = LocalDateTime.now().minusHours(6);
-        int batchLimit = 50;
+        
+        LocalDateTime retryThreshold = LocalDateTime.now().minusHours(1);
+        int batchLimit = 200;
         java.util.List<com.nmcnpm.scholarslate.entity.Paper> missingPapers =
                 paperRepository.findUnscoredForRetry(retryThreshold,
                         org.springframework.data.domain.PageRequest.of(0, batchLimit));
@@ -221,7 +222,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                 Float point = aiService.scorePaper(paper.getAbstractText());
                 if (point != null) {
                     paper.setPoint(point);
-                    log.info("Scored paper {}: {}", paper.getArxivId(), point);
+                    // log.info("Scored paper {}: {}", paper.getArxivId(), point);
                 } else {
                     log.warn("Failed to score paper {}", paper.getArxivId());
                 }
@@ -236,7 +237,7 @@ public class ArxivSyncServiceImpl implements ArxivSyncService {
                     // KHÔNG lưu chuỗi rỗng khi thất bại
                     if (newSummary != null && !newSummary.trim().isEmpty()) {
                         paper.setSummary(newSummary);
-                        log.info("Summarized paper {}", paper.getArxivId());
+                        // log.info("Summarized paper {}", paper.getArxivId());
                     }
                 }
 

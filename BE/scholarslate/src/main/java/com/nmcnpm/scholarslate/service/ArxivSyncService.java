@@ -1,6 +1,8 @@
 package com.nmcnpm.scholarslate.service;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface ArxivSyncService {
-    void syncPapers();
+    CompletableFuture<Void> syncPapers();
     void scoreMissingPapers();
 }
