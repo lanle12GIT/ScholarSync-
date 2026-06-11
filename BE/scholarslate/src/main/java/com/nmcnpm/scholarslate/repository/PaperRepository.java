@@ -17,6 +17,9 @@ public interface PaperRepository extends JpaRepository<Paper, Long>, PaperReposi
     java.util.List<Paper> findByFetchedAtAfter(java.time.LocalDateTime fetchedAt);
     java.util.List<Paper> findByPointIsNull();
 
+    // Lấy các bài theo ngày xuất bản (giống biểu đồ dashboard, nhóm theo publishedAt)
+    java.util.List<Paper> findByPublishedAt(LocalDate publishedAt);
+
     // Lấy các bài chưa có điểm và CHƯA thử (hoặc đã thử trước mốc threshold) -> tránh chấm lại bài vừa bị rate-limit
     @Query("SELECT p FROM Paper p WHERE p.point IS NULL " +
            "AND (p.scoreAttemptedAt IS NULL OR p.scoreAttemptedAt < :threshold) " +

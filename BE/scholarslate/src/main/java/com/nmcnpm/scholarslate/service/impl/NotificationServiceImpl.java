@@ -79,16 +79,15 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public void generateDailyNotifications() {
         log.info("=== [CHAY NEN] tao thong bao===");
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        List<Paper> papersFetchedToday = paperRepository.findByFetchedAtAfter(startOfDay);
+        List<Paper> papersPublishedToday = paperRepository.findByPublishedAt(LocalDate.now());
 
-        if (papersFetchedToday.isEmpty()) {
+        if (papersPublishedToday.isEmpty()) {
             log.info("=== [CHAY NEN] tao thong bao, khong co bai bao nao ca ===");
             return;
         }
 
         Map<Topic, Long> newPapersPerTopic = new HashMap<>();
-        for (Paper paper : papersFetchedToday) {
+        for (Paper paper : papersPublishedToday) {
             for (Topic topic : paper.getTopics()) {
                 newPapersPerTopic.put(topic, newPapersPerTopic.getOrDefault(topic, 0L) + 1L);
             }
